@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { clientesDemo } from "@/data/clientes-demo";
 import { PROYECTOS } from "@/data/proyectos";
 import {
   ETAPAS,
@@ -203,6 +204,38 @@ export default function Interno() {
     );
   };
 
+  const cargarDemo = async () => {
+    const demo = clientesDemo().filter((d) => !clientes.some((c) => c.id === d.id));
+    if (demo.length === 0) return setAviso("Los clientes de demo ya están cargados.");
+    setGuardando(true);
+    setAviso(null);
+    try {
+      if (almacenamiento === "redis") {
+        let lista: Cliente[] = clientes;
+        for (const c of demo) {
+          const r = await fetch("/api/clientes", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(c),
+          });
+          if (r.status === 401) return setAuth("bloqueado");
+          const j = (await r.json()) as { clientes?: Cliente[]; error?: string };
+          if (!r.ok || !j.clientes) throw new Error(j.error ?? "No se pudo cargar la demo");
+          lista = j.clientes;
+        }
+        setClientes(lista);
+      } else {
+        const lista = [...clientes, ...demo];
+        escribirLocal(lista);
+        setClientes(lista);
+      }
+    } catch (err) {
+      setAviso(err instanceof Error ? err.message : "No se pudo cargar la demo");
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   const ordenados = useMemo(() => ordenarPorSeguimiento(clientes), [clientes]);
   const visibles = useMemo(
     () =>
@@ -324,13 +357,24 @@ export default function Interno() {
                 </Chip>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={() => setEditando(nuevoCliente({ proximoContacto: hoyISO() }))}
-              className="rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-accent"
-            >
-              Nuevo cliente
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={cargarDemo}
+                disabled={guardando}
+                className="rounded-md border border-line px-3 py-1.5 text-sm text-ink-muted hover:border-ink hover:text-ink disabled:opacity-50"
+                title="Agrega clientes ficticios para probar la pantalla"
+              >
+                Cargar demo
+              </button>
+              <button
+                type="button"
+                onClick={() => setEditando(nuevoCliente({ proximoContacto: hoyISO() }))}
+                className="rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-accent"
+              >
+                Nuevo cliente
+              </button>
+            </div>
           </div>
 
           <div className={`grid gap-5 ${editando ? "lg:grid-cols-[1fr_380px]" : ""}`}>
@@ -338,7 +382,7 @@ export default function Interno() {
               {visibles.length === 0 ? (
                 <p className="px-4 py-10 text-center text-sm text-ink-muted">
                   {clientes.length === 0
-                    ? "Todavía no hay clientes. Crea el primero con “Nuevo cliente” o desde la ficha de un proyecto."
+                    ? "Todavía no hay clientes. Crea el primero con “Nuevo cliente”, desde la ficha de un proyecto, o carga la demo."
                     : "Ningún cliente en esta etapa."}
                 </p>
               ) : (
