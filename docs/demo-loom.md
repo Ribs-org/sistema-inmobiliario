@@ -1,9 +1,9 @@
-# Guion demo Loom · Ribs (≈ 2,5 min)
+# Guion demo Loom · Pyxis (≈ 2,5 min)
 
 Antes de grabar: abrir https://sistema-inmobiliario-phi.vercel.app en una pestaña limpia, ventana ancha (la leyenda de Metro solo aparece en escritorio). Tener el zoom del mapa en el nivel inicial.
 
 ## 0:00 — Gancho (10 s)
-"Esto es Ribs: un mapa de proyectos inmobiliarios de Santiago que muestra la red de Metro de hoy y la que viene, y te dice cuánto pagarías al mes por cada departamento."
+"Esto es Pyxis: un mapa de proyectos inmobiliarios de Santiago que muestra la red de Metro de hoy y la que viene, y te dice cuánto pagarías al mes por cada departamento."
 
 ## 0:10 — Mapa y Metro (35 s)
 - Mover un poco el mapa. "Cada pin es un proyecto con su precio desde, en UF."
@@ -11,12 +11,12 @@ Antes de grabar: abrir https://sistema-inmobiliario-phi.vercel.app en una pesta�
 - En la leyenda, desmarcar "En construcción y proyectadas" y volver a marcar. "Se puede prender y apagar cada línea."
 
 ## 0:45 — Clic en una estación (30 s)
-- Clic en la estación **Huelén** de L7 (punteada teal, al poniente del centro). Se dibuja el radio de 800 m y se resaltan los proyectos dentro.
-- "Elijo una estación futura y el mapa me dice qué proyectos quedan a 10 minutos caminando. Hoy Huelén Park está a 9 minutos de Quinta Normal; con la L7 va a estar a 2."
-- Atajo si el clic no cae: `?e=L7:Huelén`.
+- Clic en la estación **Matucana** de L7 (punteada teal, al poniente del centro, junto a Quinta Normal). Se dibuja el radio de 800 m y se resaltan los proyectos dentro.
+- "Elijo una estación futura y el mapa me dice qué proyectos quedan a 10 minutos caminando. Hoy Mapocho 2900 está a 15 minutos de Quinta Normal; con la L7 va a estar a 4. Y los minutos son por calle, no en línea recta."
+- Atajo si el clic no cae: `?e=L7:Matucana`.
 
 ## 1:15 — Ficha del proyecto (30 s)
-- Clic en el pin **UF 2.690** (Huelén Park) o en la tarjeta de la estación.
+- Clic en el pin **UF 2.690** (Mapocho 2900) o en la tarjeta de la estación.
 - Recorrer: estado en blanco, entrega 2028, bloque Metro actual vs futura, las 3 tipologías con precio en UF y pesos y UF/m².
 - "Tres tipologías, precio en UF y en pesos con la UF del día, que se trae sola de mindicador."
 
@@ -30,11 +30,11 @@ Antes de grabar: abrir https://sistema-inmobiliario-phi.vercel.app en una pesta�
 - "Y para el equipo comercial: precio por m² contra minutos al Metro. Los proyectos que hoy están lejos, con las líneas nuevas quedan dentro del radio."
 
 ## 2:35 — Cierre (10 s)
-"Todo esto es mock, sin Google Maps ni base de datos, y ya está corriendo en Vercel. El siguiente paso es cargar los proyectos reales."
+"Los proyectos son de muestra, pero el Metro es el real: estaciones y trazado desde OpenStreetMap, líneas futuras según Metro S.A., y distancias caminando por calle. El siguiente paso es cargar los proyectos reales."
 
 ## Enlaces directos por si algo falla
-- Estación L7 Huelén: `?e=L7:Huelén`
-- Ficha Huelén Park: `?p=huelen-park`
+- Estación L7 Matucana: `?e=L7:Matucana`
+- Ficha Mapocho 2900: `?p=huelen-park`
 - Vista Estoril (sin Metro hoy, L7 en 2028): `?p=vista-estoril`
 - Análisis: `?tab=analisis`
 - Simulador vacío: `?tab=simulador`

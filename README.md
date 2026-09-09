@@ -1,4 +1,4 @@
-# Ribs · Proyectos y Metro de Santiago
+# Pyxis · Proyectos y Metro de Santiago
 
 Prototipo jugable para una inmobiliaria: mapa de proyectos en Santiago de Chile con la red de Metro actual y futura, fichas con tipologías y un simulador de crédito hipotecario en UF y pesos.
 
@@ -12,7 +12,11 @@ Prototipo jugable para una inmobiliaria: mapa de proyectos en Santiago de Chile 
 
 ## Datos
 
-Todo es mock y vive en `src/data/`. Las coordenadas de las estaciones son aproximadas (±150 m) y los trazados de L8 y L9 son referenciales. Los precios son ilustrativos.
+- **Proyectos**: mock, en `src/data/proyectos.ts`. Precios ilustrativos.
+- **Metro operativo (L1–L6, L4A)**: estaciones y trazado real de la vía importados desde OpenStreetMap con `node scripts/importar-metro-osm.mjs` → `src/data/metro-osm.json`.
+- **Metro futuro**: `src/data/metro-futuro.json` con nombres y orden oficiales (Metro S.A. / Wikipedia, sep. 2026): L7 (19 estaciones, 2028), extensiones de L6 a Isidora Goyenechea y Lo Errázuriz (2028), L9 en tres tramos (2030/2032/2033), L8 (2032) y Línea A al aeropuerto (2032). Coordenadas estimadas; las de L7 se proyectan sobre el trazado real. La extensión de L4 a Bajos de Mena se canceló en 2023 y no se muestra.
+- **Caminatas**: distancia por calle desde cada proyecto a sus estaciones cercanas, calculada con Valhalla (perfil peatón, OSM) mediante `node --experimental-strip-types scripts/calcular-caminatas.mjs` → `src/data/caminatas.json`. Se recalcula solo lo nuevo; `--todo` fuerza todo. Sin ruta calculada se estima línea recta × 1,25. Ritmo 80 m/min.
+- **Tasa de referencia**: `/api/tasa` lee la serie F022.VIV.TIP.MA03.UF.Z.M (hipotecarios en UF a más de 3 años) del Banco Central si existen `BCCH_USER` y `BCCH_PASS` (registro gratuito en https://si3.bcentral.cl/Siete/). Si no, usa `TASA_REFERENCIA_UF` o 4,4 %.
 
 ## Desarrollo
 
@@ -31,7 +35,7 @@ npx vercel        # preview
 npx vercel --prod
 ```
 
-Variables de entorno: `CLAVE_INTERNA` (clave del área interna) y las de Upstash Redis que crea la integración. El mapa y el simulador funcionan sin ninguna.
+Variables de entorno: `CLAVE_INTERNA` (clave del área interna), las de Upstash Redis que crea la integración, y opcionalmente `BCCH_USER`/`BCCH_PASS` o `TASA_REFERENCIA_UF` para la tasa. El mapa y el simulador funcionan sin ninguna.
 
 ## Área interna (clientes)
 

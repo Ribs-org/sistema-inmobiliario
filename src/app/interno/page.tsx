@@ -272,7 +272,7 @@ export default function Interno() {
           onSubmit={entrar}
           className="w-full max-w-sm rounded-xl border border-line bg-panel p-6 shadow-sm"
         >
-          <div className="display text-lg font-bold">Ribs</div>
+          <div className="display text-lg font-bold">Pyxis</div>
           <h1 className="mt-3 text-2xl font-semibold">Área interna</h1>
           <p className="mt-1 text-sm text-ink-muted">
             Seguimiento de clientes. Solo para el equipo comercial.
@@ -313,7 +313,7 @@ export default function Interno() {
     <div className="flex h-full flex-col">
       <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-line bg-panel px-4">
         <div className="flex items-baseline gap-2">
-          <span className="display text-lg font-bold tracking-tight">Ribs</span>
+          <span className="display text-lg font-bold tracking-tight">Pyxis</span>
           <span className="text-sm text-ink-muted">Clientes</span>
         </div>
         <nav className="flex items-center gap-3 text-sm">

@@ -8,6 +8,7 @@ import { dentroDeRadio, RADIO_CAMINABLE_M } from "@/lib/geo";
 import { fmtCLP } from "@/lib/format";
 import { aplicarFiltros, FILTROS_INICIALES, PROYECTOS_ENRIQUECIDOS, type Filtros } from "@/lib/proyectos";
 import { UF_RESPALDO, type InfoUF } from "@/lib/uf";
+import { TASA_RESPALDO, type InfoTasa } from "@/lib/tasa";
 import Analitica from "@/components/Analitica";
 import FichaProyecto from "@/components/FichaProyecto";
 import LeyendaMetro from "@/components/LeyendaMetro";
@@ -46,9 +47,21 @@ export default function Home() {
     fuente: "respaldo",
   });
   const [preset, setPreset] = useState<PresetSimulador | null>(null);
+  const [infoTasa, setInfoTasa] = useState<InfoTasa>({
+    valorPct: TASA_RESPALDO,
+    periodo: null,
+    fuente: "respaldo",
+    descripcion: "Valor referencial fijo",
+  });
 
   useEffect(() => {
     let vivo = true;
+    fetch("/api/tasa")
+      .then((r) => r.json())
+      .then((j: InfoTasa) => {
+        if (vivo && j && typeof j.valorPct === "number") setInfoTasa(j);
+      })
+      .catch(() => {});
     fetch("/api/uf")
       .then((r) => r.json())
       .then((j: InfoUF) => {
@@ -136,7 +149,7 @@ export default function Home() {
     <div className="flex h-full min-w-0 flex-col overflow-hidden">
       <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-line bg-panel px-4">
         <div className="flex items-baseline gap-2">
-          <span className="display text-lg font-bold tracking-tight">Ribs</span>
+          <span className="display text-lg font-bold tracking-tight">Pyxis</span>
           <span className="hidden text-sm text-ink-muted sm:inline">Proyectos y Metro · Santiago</span>
         </div>
         <nav
@@ -249,6 +262,7 @@ export default function Home() {
                   key={preset?.id ?? "libre"}
                   valorUF={infoUF.valor}
                   infoUF={infoUF}
+                  infoTasa={infoTasa}
                   onCambiarUF={cambiarUF}
                   preset={preset}
                   onQuitarPreset={() => setPreset(null)}

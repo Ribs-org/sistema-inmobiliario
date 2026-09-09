@@ -1,5 +1,5 @@
 import { PROYECTOS, type Proyecto } from "@/data/proyectos";
-import { metroCercano, minutosCaminando, type EstacionCercana } from "@/lib/geo";
+import { metroCercano, type EstacionCercana } from "@/lib/geo";
 
 export type ProyectoEnriquecido = Proyecto & {
   precioMinUF: number;
@@ -15,11 +15,11 @@ export type ProyectoEnriquecido = Proyecto & {
 };
 
 export const PROYECTOS_ENRIQUECIDOS: ProyectoEnriquecido[] = PROYECTOS.map((p) => {
-  const { actual, futura } = metroCercano(p);
+  const { actual, futura } = metroCercano(p, p.id);
   const precios = p.tipologias.map((t) => t.precioUF);
   const ufm2 = p.tipologias.map((t) => t.precioUF / t.m2Utiles);
-  const minActual = actual ? minutosCaminando(actual.distanciaM) : 99;
-  const minFuturo = futura ? minutosCaminando(futura.distanciaM) : minActual;
+  const minActual = actual ? actual.minutos : 99;
+  const minFuturo = futura ? futura.minutos : minActual;
   return {
     ...p,
     precioMinUF: Math.min(...precios),

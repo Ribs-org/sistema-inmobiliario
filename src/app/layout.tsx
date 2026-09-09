@@ -15,7 +15,7 @@ const plex = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Ribs · Proyectos y Metro de Santiago",
+  title: "Pyxis · Proyectos y Metro de Santiago",
   description:
     "Mapa de proyectos inmobiliarios en Santiago con la red de Metro actual y futura, y simulador de crédito hipotecario en UF y pesos.",
 };

@@ -135,7 +135,7 @@ export default function Mapa({
         .map((l) => (
           <Polyline
             key={`halo-${l.id}`}
-            positions={l.estaciones.map((s) => [s.lat, s.lng] as [number, number])}
+            positions={l.trazado ?? l.estaciones.map((s) => [s.lat, s.lng] as [number, number])}
             pathOptions={{ color: "#fff", weight: 8, opacity: 0.9, lineCap: "round", lineJoin: "round" }}
             interactive={false}
           />
@@ -146,7 +146,7 @@ export default function Mapa({
         return (
           <Polyline
             key={l.id}
-            positions={l.estaciones.map((s) => [s.lat, s.lng] as [number, number])}
+            positions={l.trazado ?? l.estaciones.map((s) => [s.lat, s.lng] as [number, number])}
             pathOptions={{
               color: l.color,
               weight: futura ? 4 : 5,

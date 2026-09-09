@@ -18,7 +18,7 @@ export default function LeyendaMetro({ capas, onCapas }: Props) {
   };
 
   return (
-    <div className="w-60 rounded-lg border border-line bg-panel/95 text-xs shadow-lg backdrop-blur">
+    <div className="w-72 rounded-lg border border-line bg-panel/95 text-xs shadow-lg backdrop-blur">
       <button
         type="button"
         onClick={() => setAbierta((v) => !v)}

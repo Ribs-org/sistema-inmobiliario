@@ -1,0 +1,456 @@
+{
+ "fuente": "Valhalla (OpenStreetMap), perfil peatón",
+ "fecha": "2026-09-09",
+ "rutas": {
+  "irarrazaval-3300": {
+   "L6:Ñuñoa": {
+    "metros": 487,
+    "rectaM": 217
+   },
+   "L3:Ñuñoa": {
+    "metros": 516,
+    "rectaM": 239
+   },
+   "L3:Chile España": {
+    "metros": 930,
+    "rectaM": 606
+   },
+   "L6:Estadio Nacional": {
+    "metros": 848,
+    "rectaM": 779
+   },
+   "L8:Chile España": {
+    "metros": 520,
+    "rectaM": 325
+   },
+   "L8:Grecia": {
+    "metros": 1390,
+    "rectaM": 1006
+   },
+   "L8:Diagonal Oriente": {
+    "metros": 1950,
+    "rectaM": 1585
+   }
+  },
+  "bustamante-180": {
+   "L5:Parque Bustamante": {
+    "metros": 136,
+    "rectaM": 114
+   },
+   "L5:Baquedano": {
+    "metros": 520,
+    "rectaM": 482
+   },
+   "L1:Baquedano": {
+    "metros": 546,
+    "rectaM": 514
+   },
+   "L5:Santa Isabel": {
+    "metros": 667,
+    "rectaM": 614
+   },
+   "L7:Baquedano": {
+    "metros": 858,
+    "rectaM": 603
+   },
+   "L9N:Santa Lucía": {
+    "metros": 1622,
+    "rectaM": 1095
+   },
+   "L7:Puente Cal y Canto": {
+    "metros": 2443,
+    "rectaM": 2054
+   }
+  },
+  "leones-lofts": {
+   "L1:Los Leones": {
+    "metros": 262,
+    "rectaM": 196
+   },
+   "L6:Los Leones": {
+    "metros": 492,
+    "rectaM": 342
+   },
+   "L1:Pedro de Valdivia": {
+    "metros": 668,
+    "rectaM": 500
+   },
+   "L1:Tobalaba": {
+    "metros": 946,
+    "rectaM": 858
+   },
+   "L6O:Los Leones": {
+    "metros": 390,
+    "rectaM": 315
+   },
+   "L8:Los Leones": {
+    "metros": 390,
+    "rectaM": 315
+   },
+   "L7:Pedro de Valdivia": {
+    "metros": 751,
+    "rectaM": 547
+   }
+  },
+  "vista-estoril": {
+   "L1:Los Dominicos": {
+    "metros": 2765,
+    "rectaM": 2361
+   },
+   "L1:Hernando de Magallanes": {
+    "metros": 3072,
+    "rectaM": 2468
+   },
+   "L1:Manquehue": {
+    "metros": 3837,
+    "rectaM": 3200
+   },
+   "L1:Escuela Militar": {
+    "metros": 5176,
+    "rectaM": 4392
+   },
+   "L7:Estoril": {
+    "metros": 684,
+    "rectaM": 471
+   },
+   "L7:Padre Hurtado": {
+    "metros": 989,
+    "rectaM": 728
+   },
+   "L7:Gerónimo de Alderete": {
+    "metros": 1906,
+    "rectaM": 1638
+   }
+  },
+  "alameda-4100": {
+   "L1:Universidad de Santiago": {
+    "metros": 347,
+    "rectaM": 246
+   },
+   "L1:San Alberto Hurtado": {
+    "metros": 373,
+    "rectaM": 325
+   },
+   "L1:Estación Central": {
+    "metros": 1137,
+    "rectaM": 975
+   },
+   "L1:Ecuador": {
+    "metros": 1084,
+    "rectaM": 1037
+   },
+   "L7:Matucana": {
+    "metros": 3053,
+    "rectaM": 2343
+   },
+   "L7:Walker Martínez": {
+    "metros": 3150,
+    "rectaM": 2696
+   },
+   "L7:Cumming": {
+    "metros": 3990,
+    "rectaM": 2996
+   }
+  },
+  "macul-sur": {
+   "L5:San Joaquín": {
+    "metros": 991,
+    "rectaM": 754
+   },
+   "L5:Camino Agrícola": {
+    "metros": 1153,
+    "rectaM": 791
+   },
+   "L5:Carlos Valdovinos": {
+    "metros": 1795,
+    "rectaM": 1277
+   },
+   "L5:Pedrero": {
+    "metros": 2025,
+    "rectaM": 1484
+   },
+   "L8:Las Torres": {
+    "metros": 2615,
+    "rectaM": 1929
+   },
+   "L8:Quilín": {
+    "metros": 3266,
+    "rectaM": 2037
+   },
+   "L8:Rodrigo de Araya": {
+    "metros": 4062,
+    "rectaM": 2840
+   }
+  },
+  "gran-avenida-4900": {
+   "L2:Lo Vial": {
+    "metros": 443,
+    "rectaM": 305
+   },
+   "L2:Departamental": {
+    "metros": 767,
+    "rectaM": 602
+   },
+   "L2:San Miguel": {
+    "metros": 1338,
+    "rectaM": 1060
+   },
+   "L2:Ciudad del Niño": {
+    "metros": 1581,
+    "rectaM": 1373
+   },
+   "L9:Departamental": {
+    "metros": 1698,
+    "rectaM": 1543
+   },
+   "L9:La Legua": {
+    "metros": 2293,
+    "rectaM": 1602
+   },
+   "L9:La Legua-Pedro Alarcón": {
+    "metros": 2803,
+    "rectaM": 2279
+   }
+  },
+  "independencia-norte": {
+   "L3:Hospitales": {
+    "metros": 407,
+    "rectaM": 299
+   },
+   "L2:Cerro Blanco": {
+    "metros": 1348,
+    "rectaM": 1158
+   },
+   "L2:Patronato": {
+    "metros": 1712,
+    "rectaM": 1404
+   },
+   "L3:Puente Cal y Canto": {
+    "metros": 1575,
+    "rectaM": 1433
+   },
+   "L9N:Puente Cal y Canto": {
+    "metros": 1699,
+    "rectaM": 1509
+   },
+   "L7:Puente Cal y Canto": {
+    "metros": 1710,
+    "rectaM": 1522
+   },
+   "L7:Cumming": {
+    "metros": 2602,
+    "rectaM": 1681
+   }
+  },
+  "huelen-park": {
+   "L5:Quinta Normal": {
+    "metros": 1163,
+    "rectaM": 1027
+   },
+   "L5:Gruta de Lourdes": {
+    "metros": 1468,
+    "rectaM": 1165
+   },
+   "L5:Cumming": {
+    "metros": 2125,
+    "rectaM": 1494
+   },
+   "L2:Santa Ana": {
+    "metros": 2839,
+    "rectaM": 2139
+   },
+   "L7:Matucana": {
+    "metros": 317,
+    "rectaM": 223
+   },
+   "L7:Cumming": {
+    "metros": 1436,
+    "rectaM": 1209
+   },
+   "L7:Walker Martínez": {
+    "metros": 1823,
+    "rectaM": 1530
+   }
+  },
+  "egana-living": {
+   "L3:Villa Frei": {
+    "metros": 486,
+    "rectaM": 435
+   },
+   "L3:Chile España": {
+    "metros": 1235,
+    "rectaM": 1154
+   },
+   "L4:Los Orientales": {
+    "metros": 1651,
+    "rectaM": 1311
+   },
+   "L3:Plaza Egaña": {
+    "metros": 1524,
+    "rectaM": 1420
+   },
+   "L8:Chile España": {
+    "metros": 1604,
+    "rectaM": 1410
+   },
+   "L8:Grecia": {
+    "metros": 2042,
+    "rectaM": 1501
+   },
+   "L8:Rodrigo de Araya": {
+    "metros": 2315,
+    "rectaM": 1995
+   }
+  },
+  "puente-alto-centro": {
+   "L4:Plaza de Puente Alto": {
+    "metros": 707,
+    "rectaM": 433
+   },
+   "L4:Las Mercedes": {
+    "metros": 803,
+    "rectaM": 623
+   },
+   "L4:Protectora de la Infancia": {
+    "metros": 2246,
+    "rectaM": 1916
+   },
+   "L4:Hospital Sótero del Río": {
+    "metros": 3564,
+    "rectaM": 3337
+   },
+   "L9S:Plaza de Puente Alto": {
+    "metros": 737,
+    "rectaM": 459
+   },
+   "L9S:Ejército": {
+    "metros": 715,
+    "rectaM": 553
+   },
+   "L9S:Juanita": {
+    "metros": 1885,
+    "rectaM": 1466
+   }
+  },
+  "bilbao-oriente": {
+   "L4:Francisco Bilbao": {
+    "metros": 582,
+    "rectaM": 534
+   },
+   "L4:Príncipe de Gales": {
+    "metros": 1061,
+    "rectaM": 840
+   },
+   "L4:Cristóbal Colón": {
+    "metros": 1431,
+    "rectaM": 1352
+   },
+   "L4:Simón Bolívar": {
+    "metros": 1854,
+    "rectaM": 1545
+   },
+   "L8:Eliodoro Yáñez": {
+    "metros": 2724,
+    "rectaM": 2312
+   },
+   "L8:Diagonal Oriente": {
+    "metros": 2805,
+    "rectaM": 2364
+   },
+   "L6O:Los Leones": {
+    "metros": 3124,
+    "rectaM": 2777
+   }
+  },
+  "florida-walker": {
+   "L4:Trinidad": {
+    "metros": 3957,
+    "rectaM": 2572
+   },
+   "L4:Rojas Magallanes": {
+    "metros": 2964,
+    "rectaM": 2585
+   },
+   "L4:San José de la Estrella": {
+    "metros": 4464,
+    "rectaM": 3017
+   },
+   "L4:Vicente Valdés": {
+    "metros": 3521,
+    "rectaM": 3052
+   },
+   "L8:Rojas Magallanes": {
+    "metros": 410,
+    "rectaM": 284
+   },
+   "L8:Walker Martínez": {
+    "metros": 1577,
+    "rectaM": 1171
+   },
+   "L8:Trinidad": {
+    "metros": 1486,
+    "rectaM": 1256
+   }
+  },
+  "santa-rosa-3600": {
+   "L2:El Llano": {
+    "metros": 883,
+    "rectaM": 627
+   },
+   "L6:Bío Bío": {
+    "metros": 982,
+    "rectaM": 800
+   },
+   "L2:San Miguel": {
+    "metros": 1511,
+    "rectaM": 944
+   },
+   "L6:Franklin": {
+    "metros": 1257,
+    "rectaM": 1004
+   },
+   "L9:La Legua": {
+    "metros": 982,
+    "rectaM": 467
+   },
+   "L9:La Legua-Pedro Alarcón": {
+    "metros": 675,
+    "rectaM": 571
+   },
+   "L9:Bío Bío": {
+    "metros": 1956,
+    "rectaM": 1608
+   }
+  },
+  "patronato-recoleta": {
+   "L2:Patronato": {
+    "metros": 512,
+    "rectaM": 392
+   },
+   "L2:Cerro Blanco": {
+    "metros": 490,
+    "rectaM": 431
+   },
+   "L2:Puente Cal y Canto": {
+    "metros": 1342,
+    "rectaM": 909
+   },
+   "L3:Puente Cal y Canto": {
+    "metros": 1373,
+    "rectaM": 921
+   },
+   "L9N:Puente Cal y Canto": {
+    "metros": 1260,
+    "rectaM": 878
+   },
+   "L7:Puente Cal y Canto": {
+    "metros": 1271,
+    "rectaM": 891
+   },
+   "L7:Baquedano": {
+    "metros": 2011,
+    "rectaM": 1660
+   }
+  }
+ }
+}

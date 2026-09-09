@@ -1,8 +1,8 @@
 "use client";
 
-import { ETIQUETA_ESTADO, type EstacionConLinea } from "@/data/metro";
+import { ETIQUETA_ESTADO, etiquetaLinea, type EstacionConLinea } from "@/data/metro";
 import { fmtDist, fmtUF } from "@/lib/format";
-import { minutosCaminando } from "@/lib/geo";
+import { minutosEstimados } from "@/lib/geo";
 import type { ProyectoEnriquecido } from "@/lib/proyectos";
 import { EtiquetaLinea } from "./ui";
 
@@ -34,7 +34,7 @@ export default function TarjetaEstacion({
             {estacion.lineaNombre}
             {futura ? ` · ${ETIQUETA_ESTADO[estacion.estado]} ${estacion.apertura ?? ""}` : ""}
             {estacion.combina?.length
-              ? ` · combina con ${estacion.combina.map((c) => c.replace("X", "")).join(", ")}`
+              ? ` · combina con ${estacion.combina.map(etiquetaLinea).join(", ")}`
               : ""}
           </div>
         </div>
@@ -68,7 +68,7 @@ export default function TarjetaEstacion({
                       <span className="font-medium">{item.nombre}</span>{" "}
                       <span className="text-ink-muted">desde {fmtUF(item.precioMinUF)}</span>
                     </span>
-                    <span className="shrink-0 text-ink-muted">{minutosCaminando(distanciaM)} min</span>
+                    <span className="shrink-0 text-ink-muted">{minutosEstimados(distanciaM)} min</span>
                   </button>
                 </li>
               ))}

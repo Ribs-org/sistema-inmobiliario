@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ETIQUETA_ESTADO, type EstacionConLinea } from "@/data/metro";
 import type { Tipologia } from "@/data/proyectos";
 import { fmtCLP, fmtDist, fmtM2, fmtUF } from "@/lib/format";
+import type { EstacionCercana } from "@/lib/geo";
 import type { ProyectoEnriquecido } from "@/lib/proyectos";
 import { BadgeEstado, Dato, EtiquetaLinea } from "./ui";
 
@@ -73,9 +74,7 @@ export default function FichaProyecto({
             {p.metroActual && (
               <li>
                 <FilaEstacion
-                  estacion={p.metroActual.estacion}
-                  distanciaM={p.metroActual.distanciaM}
-                  minutos={p.minActual}
+                  cercana={p.metroActual}
                   onClick={() => onSeleccionarEstacion(p.metroActual!.estacion)}
                 />
               </li>
@@ -83,9 +82,7 @@ export default function FichaProyecto({
             {p.metroFuturo ? (
               <li>
                 <FilaEstacion
-                  estacion={p.metroFuturo.estacion}
-                  distanciaM={p.metroFuturo.distanciaM}
-                  minutos={p.minConFuturo}
+                  cercana={p.metroFuturo}
                   onClick={() => onSeleccionarEstacion(p.metroFuturo!.estacion)}
                 />
               </li>
@@ -156,17 +153,8 @@ export default function FichaProyecto({
   );
 }
 
-function FilaEstacion({
-  estacion,
-  distanciaM,
-  minutos,
-  onClick,
-}: {
-  estacion: EstacionConLinea;
-  distanciaM: number;
-  minutos: number;
-  onClick: () => void;
-}) {
+function FilaEstacion({ cercana, onClick }: { cercana: EstacionCercana; onClick: () => void }) {
+  const { estacion, caminataM, minutos, fuente } = cercana;
   const futura = estacion.estado !== "operativa";
   return (
     <button
@@ -184,8 +172,10 @@ function FilaEstacion({
         </span>
       </span>
       <span className="shrink-0 text-right text-sm">
-        <span className="block font-semibold">{minutos} min</span>
-        <span className="block text-xs text-ink-faint">{fmtDist(distanciaM)}</span>
+        <span className="block font-semibold">{minutos} min a pie</span>
+        <span className="block text-xs text-ink-faint">
+          {fmtDist(caminataM)} {fuente === "ruta" ? "por calle" : "aprox."}
+        </span>
       </span>
     </button>
   );

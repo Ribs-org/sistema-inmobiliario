@@ -1,5 +1,6 @@
 "use client";
 
+import { etiquetaLinea } from "@/data/metro";
 import { COMUNAS } from "@/data/proyectos";
 import { fmtCLP, fmtUF } from "@/lib/format";
 import { MINUTOS_CERCA_METRO, type Filtros, type ProyectoEnriquecido } from "@/lib/proyectos";
@@ -164,8 +165,8 @@ export default function PanelProyectos({
                         <span className="truncate">
                           {p.metroFuturo.estacion.nombre}{" "}
                           <span className="text-ink-muted">
-                            {p.metroFuturo.estacion.lineaId.replace("X", "")}{" "}
-                            {p.metroFuturo.estacion.apertura} · {p.minConFuturo} min
+                            {etiquetaLinea(p.metroFuturo.estacion.lineaId)} {p.metroFuturo.estacion.apertura}{" "}
+                            · {p.minConFuturo} min
                           </span>
                         </span>
                       </div>

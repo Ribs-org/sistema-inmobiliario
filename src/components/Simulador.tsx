@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { CARGA_MAXIMA_RENTA, cuotaPie, simularCredito } from "@/lib/credito";
 import { fmtCLP, fmtPct, fmtUF } from "@/lib/format";
+import type { InfoTasa } from "@/lib/tasa";
 import type { InfoUF } from "@/lib/uf";
 import { Interruptor } from "./ui";
 
@@ -18,22 +19,24 @@ export type PresetSimulador = {
 type Props = {
   valorUF: number;
   infoUF: InfoUF;
+  infoTasa: InfoTasa;
   onCambiarUF: (v: number) => void;
   preset: PresetSimulador | null;
   onQuitarPreset: () => void;
 };
 
 const PLAZOS = [15, 20, 25, 30];
-const TASA_REFERENCIA = 4.4;
 
-export default function Simulador({ valorUF, infoUF, onCambiarUF, preset, onQuitarPreset }: Props) {
+export default function Simulador({ valorUF, infoUF, infoTasa, onCambiarUF, preset, onQuitarPreset }: Props) {
   const [precioUF, setPrecioUF] = useState(preset?.precioUF ?? 4000);
   const [piePct, setPiePct] = useState(preset?.piePct ?? 20);
   const [bonoPiePct, setBonoPiePct] = useState(preset?.bonoPiePct ?? 0);
   const [pieEnCuotas, setPieEnCuotas] = useState(preset?.pieEnCuotas ?? false);
   const [mesesEntrega, setMesesEntrega] = useState(18);
   const [plazoAnios, setPlazo] = useState(25);
-  const [tasaAnualPct, setTasa] = useState(TASA_REFERENCIA);
+  // Mientras el usuario no edite la tasa, se sigue la referencia (que puede llegar después del primer render).
+  const [tasaManual, setTasa] = useState<number | null>(null);
+  const tasaAnualPct = tasaManual ?? infoTasa.valorPct;
   const [incluirSeguros, setSeguros] = useState(true);
   const [rentaCLP, setRenta] = useState<number | "">("");
   const [vistaTabla, setVistaTabla] = useState<"anual" | "mensual">("anual");
@@ -186,7 +189,14 @@ export default function Simulador({ valorUF, infoUF, onCambiarUF, preset, onQuit
             </Campo>
 
             <div className="space-y-5">
-              <Campo etiqueta="Tasa anual en UF" ayuda={`Referencia mercado ${TASA_REFERENCIA} %`}>
+              <Campo
+                etiqueta="Tasa anual en UF"
+                ayuda={
+                  infoTasa.fuente === "bcentral"
+                    ? `Banco Central ${infoTasa.periodo ?? ""}: ${infoTasa.valorPct} %`
+                    : `Referencia ${infoTasa.valorPct} %`
+                }
+              >
                 <EntradaNumero
                   valor={tasaAnualPct}
                   onChange={setTasa}

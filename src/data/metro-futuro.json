@@ -1,0 +1,145 @@
+{
+  "nota": "Líneas en construcción y proyectadas. Nombres y orden según Metro S.A. / Wikipedia (sep. 2026). Coordenadas estimadas por intersección de calles; las de L7 se ajustan al trazado real de OSM.",
+  "lineas": [
+    {
+      "id": "L7",
+      "nombre": "Línea 7",
+      "color": "#1FA6A0",
+      "estado": "construccion",
+      "apertura": 2028,
+      "nota": "Renca – Vitacura, 26 km y 19 estaciones. 42 % de avance (jun. 2026); apertura oficial dic. 2028, con riesgo de atraso.",
+      "estaciones": [
+        { "nombre": "Brasil", "lat": -33.403, "lng": -70.762 },
+        { "nombre": "José Miguel Infante", "lat": -33.406, "lng": -70.749 },
+        { "nombre": "Salvador Gutiérrez", "lat": -33.415, "lng": -70.742 },
+        { "nombre": "Huelén", "lat": -33.421, "lng": -70.736, "combina": ["LA"] },
+        { "nombre": "Neptuno", "lat": -33.426, "lng": -70.725 },
+        { "nombre": "Radal", "lat": -33.4285, "lng": -70.712 },
+        { "nombre": "Walker Martínez", "lat": -33.43, "lng": -70.698 },
+        { "nombre": "Matucana", "lat": -33.433, "lng": -70.6805 },
+        { "nombre": "Cumming", "lat": -33.4325, "lng": -70.6685 },
+        { "nombre": "Puente Cal y Canto", "lat": -33.4331, "lng": -70.6518, "combina": ["L2", "L3", "L9N"] },
+        { "nombre": "Baquedano", "lat": -33.437, "lng": -70.6345, "combina": ["L1", "L5"] },
+        { "nombre": "Pedro de Valdivia", "lat": -33.4273, "lng": -70.6118, "combina": ["L1"] },
+        { "nombre": "Isidora Goyenechea", "lat": -33.4135, "lng": -70.5985, "combina": ["L6O"] },
+        { "nombre": "Vitacura", "lat": -33.4045, "lng": -70.59 },
+        { "nombre": "Américo Vespucio", "lat": -33.399, "lng": -70.58 },
+        { "nombre": "Parque Araucano", "lat": -33.401, "lng": -70.573 },
+        { "nombre": "Gerónimo de Alderete", "lat": -33.396, "lng": -70.562 },
+        { "nombre": "Padre Hurtado", "lat": -33.39, "lng": -70.554 },
+        { "nombre": "Estoril", "lat": -33.3855, "lng": -70.544 }
+      ]
+    },
+    {
+      "id": "L6O",
+      "nombre": "L6 a Isidora Goyenechea",
+      "color": "#8e16a1",
+      "estado": "construccion",
+      "apertura": 2028,
+      "nota": "Extensión oriente de L6: Los Leones – Isidora Goyenechea (combinación con L7).",
+      "estaciones": [
+        { "nombre": "Los Leones", "lat": -33.4222, "lng": -70.606, "combina": ["L1", "L6"] },
+        { "nombre": "Isidora Goyenechea", "lat": -33.4135, "lng": -70.5985, "combina": ["L7"] }
+      ]
+    },
+    {
+      "id": "L6P",
+      "nombre": "L6 a Lo Errázuriz",
+      "color": "#8e16a1",
+      "estado": "construccion",
+      "apertura": 2028,
+      "nota": "Extensión poniente de L6: Cerrillos – Lo Errázuriz (intermodal con Tren Melipilla). 46 % de avance (jun. 2026).",
+      "estaciones": [
+        { "nombre": "Cerrillos", "lat": -33.5, "lng": -70.708, "combina": ["L6"] },
+        { "nombre": "Lo Errázuriz", "lat": -33.501, "lng": -70.729 }
+      ]
+    },
+    {
+      "id": "L9",
+      "nombre": "Línea 9 (Bío Bío–La Pintana)",
+      "color": "#D9127A",
+      "estado": "construccion",
+      "apertura": 2030,
+      "nota": "Bío Bío – Plaza La Pintana, 10 estaciones. Obras iniciadas en agosto 2025.",
+      "estaciones": [
+        { "nombre": "Bío Bío", "lat": -33.47, "lng": -70.648, "combina": ["L6", "L9N"] },
+        { "nombre": "La Legua-Pedro Alarcón", "lat": -33.479, "lng": -70.645 },
+        { "nombre": "La Legua", "lat": -33.488, "lng": -70.643 },
+        { "nombre": "Departamental", "lat": -33.5, "lng": -70.64 },
+        { "nombre": "Lo Ovalle", "lat": -33.514, "lng": -70.636 },
+        { "nombre": "Linares", "lat": -33.522, "lng": -70.634 },
+        { "nombre": "Santa Rosa", "lat": -33.526, "lng": -70.631, "combina": ["L4A"] },
+        { "nombre": "Hospital Padre Hurtado", "lat": -33.54, "lng": -70.629 },
+        { "nombre": "Observatorio", "lat": -33.553, "lng": -70.626 },
+        { "nombre": "Plaza La Pintana", "lat": -33.583, "lng": -70.624, "combina": ["L9S"] }
+      ]
+    },
+    {
+      "id": "L9N",
+      "nombre": "Línea 9 (norte)",
+      "color": "#D9127A",
+      "estado": "proyectada",
+      "apertura": 2032,
+      "nota": "Puente Cal y Canto – Bío Bío, 4 estaciones. En licitación.",
+      "estaciones": [
+        { "nombre": "Puente Cal y Canto", "lat": -33.4331, "lng": -70.6518, "combina": ["L2", "L3", "L7"] },
+        { "nombre": "Santa Lucía", "lat": -33.4415, "lng": -70.644, "combina": ["L1"] },
+        { "nombre": "Matta", "lat": -33.4585, "lng": -70.643, "combina": ["L3"] },
+        { "nombre": "Ñuble", "lat": -33.465, "lng": -70.6435 },
+        { "nombre": "Bío Bío", "lat": -33.47, "lng": -70.648, "combina": ["L6", "L9"] }
+      ]
+    },
+    {
+      "id": "L9S",
+      "nombre": "Línea 9 (sur)",
+      "color": "#D9127A",
+      "estado": "proyectada",
+      "apertura": 2033,
+      "nota": "Plaza La Pintana – Plaza de Puente Alto, 5 estaciones. En licitación.",
+      "estaciones": [
+        { "nombre": "Plaza La Pintana", "lat": -33.583, "lng": -70.624, "combina": ["L9"] },
+        { "nombre": "La Primavera", "lat": -33.595, "lng": -70.618 },
+        { "nombre": "Eyzaguirre", "lat": -33.604, "lng": -70.608 },
+        { "nombre": "Juanita", "lat": -33.606, "lng": -70.595 },
+        { "nombre": "Ejército", "lat": -33.608, "lng": -70.585 },
+        { "nombre": "Plaza de Puente Alto", "lat": -33.609, "lng": -70.575, "combina": ["L4"] }
+      ]
+    },
+    {
+      "id": "L8",
+      "nombre": "Línea 8",
+      "color": "#F26522",
+      "estado": "proyectada",
+      "apertura": 2032,
+      "nota": "Los Leones – Mall Plaza Tobalaba, 19 km y 14 estaciones. Aprobación ambiental mayo 2026; en licitación. Tramo Chile España – Puente Alto en 2032, tramo norte en 2033.",
+      "estaciones": [
+        { "nombre": "Los Leones", "lat": -33.4222, "lng": -70.606, "combina": ["L1", "L6"] },
+        { "nombre": "Eliodoro Yáñez", "lat": -33.43, "lng": -70.604 },
+        { "nombre": "Diagonal Oriente", "lat": -33.442, "lng": -70.603 },
+        { "nombre": "Chile España", "lat": -33.456, "lng": -70.601, "combina": ["L3"] },
+        { "nombre": "Grecia", "lat": -33.464, "lng": -70.599 },
+        { "nombre": "Rodrigo de Araya", "lat": -33.472, "lng": -70.596 },
+        { "nombre": "Quilín", "lat": -33.483, "lng": -70.593 },
+        { "nombre": "Las Torres", "lat": -33.495, "lng": -70.589 },
+        { "nombre": "Macul", "lat": -33.504, "lng": -70.578, "combina": ["L4"] },
+        { "nombre": "Walker Martínez", "lat": -33.523, "lng": -70.566 },
+        { "nombre": "Rojas Magallanes", "lat": -33.533, "lng": -70.562 },
+        { "nombre": "Trinidad", "lat": -33.544, "lng": -70.56 },
+        { "nombre": "Diego Portales", "lat": -33.559, "lng": -70.557 },
+        { "nombre": "Mall Plaza Tobalaba", "lat": -33.574, "lng": -70.556 }
+      ]
+    },
+    {
+      "id": "LA",
+      "nombre": "Línea A (Aeropuerto)",
+      "color": "#0E9CB8",
+      "estado": "proyectada",
+      "apertura": 2032,
+      "nota": "Tren ligero Huelén (L7) – Aeropuerto, 6,5 km. Anunciada en junio 2025; tarifa diferenciada.",
+      "estaciones": [
+        { "nombre": "Huelén", "lat": -33.421, "lng": -70.736, "combina": ["L7"] },
+        { "nombre": "Aeropuerto", "lat": -33.393, "lng": -70.786 }
+      ]
+    }
+  ]
+}

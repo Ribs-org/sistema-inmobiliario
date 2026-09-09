@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { etiquetaLinea } from "@/data/metro";
 import { fmtUF } from "@/lib/format";
 import { MINUTOS_CERCA_METRO, type ProyectoEnriquecido } from "@/lib/proyectos";
 import { Interruptor } from "./ui";
@@ -242,7 +243,7 @@ export default function Analitica({ proyectos, seleccionadoId, onSeleccionar }: 
                 {activo.p.metroFuturo && (
                   <div className="text-ink-muted">
                     Futuro: {activo.p.metroFuturo.estacion.nombre} (
-                    {activo.p.metroFuturo.estacion.lineaId.replace("X", "")}{" "}
+                    {etiquetaLinea(activo.p.metroFuturo.estacion.lineaId)}{" "}
                     {activo.p.metroFuturo.estacion.apertura})
                   </div>
                 )}
@@ -302,8 +303,8 @@ export default function Analitica({ proyectos, seleccionadoId, onSeleccionar }: 
                     {d.p.metroFuturo && (
                       <>
                         {" "}
-                        → {d.p.metroFuturo.estacion.nombre} (
-                        {d.p.metroFuturo.estacion.lineaId.replace("X", "")})
+                        → {d.p.metroFuturo.estacion.nombre} ({etiquetaLinea(d.p.metroFuturo.estacion.lineaId)}
+                        )
                       </>
                     )}
                   </td>

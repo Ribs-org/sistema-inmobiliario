@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { ETIQUETA_ESTADO_VENTA, type EstadoVenta } from "@/data/proyectos";
-import type { EstadoLinea } from "@/data/metro";
+import { etiquetaLinea, type EstadoLinea } from "@/data/metro";
 
 /** Punto de color de una línea de Metro. Las futuras se dibujan huecas. */
 export function PuntoLinea({
@@ -38,7 +38,7 @@ export function EtiquetaLinea({ id, color, estado }: { id: string; color: string
         border: `1px ${futura ? "dashed" : "solid"} ${color}`,
       }}
     >
-      {id.replace("X", "")}
+      {etiquetaLinea(id)}
     </span>
   );
 }

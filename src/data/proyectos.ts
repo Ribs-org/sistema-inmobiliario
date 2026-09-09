@@ -236,7 +236,7 @@ export const PROYECTOS: Proyecto[] = [
   },
   {
     id: "huelen-park",
-    nombre: "Huelén Park",
+    nombre: "Mapocho 2900",
     inmobiliaria: "Grupo Cordillera",
     comuna: "Quinta Normal",
     direccion: "Av. Mapocho 2900",
@@ -249,7 +249,7 @@ export const PROYECTOS: Proyecto[] = [
     pieMinimoPct: 10,
     pieEnCuotas: true,
     descripcion:
-      "Junto al Parque de los Reyes. Hoy a 800 m de Quinta Normal (L5); la estación Huelén (L7, 2028) quedará en la misma cuadra.",
+      "Junto al Parque de los Reyes. Hoy a 15 minutos a pie de Quinta Normal (L5); la estación Matucana (L7, 2028) quedará a 300 m.",
     amenidades: ["Quincho", "Gimnasio", "Sala de niños", "Bicicletero"],
     tipologias: [
       t("a", "1D1B", 1, 1, 37, 5, 2690, "Norte (parque)", 42),
@@ -293,7 +293,7 @@ export const PROYECTOS: Proyecto[] = [
     pieMinimoPct: 10,
     bonoPiePct: 10,
     pieEnCuotas: true,
-    descripcion: "A dos cuadras de Plaza de Puente Alto (L4) y del futuro tramo hacia Bajos de Mena.",
+    descripcion: "A dos cuadras de Plaza de Puente Alto (L4), donde llegará también la Línea 9.",
     amenidades: ["Quincho", "Juegos infantiles", "Sala multiuso", "Bicicletero"],
     tipologias: [
       t("a", "1D1B", 1, 1, 38, 5, 2150, "Norte", 40),
@@ -315,7 +315,7 @@ export const PROYECTOS: Proyecto[] = [
     unidades: 56,
     pieMinimoPct: 20,
     descripcion:
-      "Barrio residencial de Las Condes. Hoy a 1,5 km de Francisco Bilbao (L4); la Línea 8 proyecta una estación a 300 m.",
+      "Barrio residencial de Las Condes, de casas y edificios bajos. Sin Metro a menos de 1,5 km: Francisco Bilbao (L4) queda a unos 20 minutos a pie.",
     amenidades: ["Piscina", "Gimnasio", "Quincho", "Bodega incluida"],
     tipologias: [
       t("a", "2D2B", 2, 2, 72, 12, 9400, "Norte", 10),
@@ -325,19 +325,20 @@ export const PROYECTOS: Proyecto[] = [
   },
   {
     id: "florida-walker",
-    nombre: "Walker Martínez 1600",
+    nombre: "Tobalaba 11.200",
     inmobiliaria: "Constructora Río Mapocho",
     comuna: "La Florida",
-    direccion: "Walker Martínez 1600",
-    lat: -33.5392,
-    lng: -70.5762,
+    direccion: "Av. Tobalaba 11.200",
+    lat: -33.5335,
+    lng: -70.565,
     estado: "en-verde",
     entrega: "Primer semestre 2028",
     pisos: 16,
     unidades: 240,
     pieMinimoPct: 10,
     pieEnCuotas: true,
-    descripcion: "A 900 m de Trinidad (L4). La Línea 8 proyecta una estación en Walker Martínez.",
+    descripcion:
+      "Sector oriente de La Florida. Hoy a más de 20 minutos de Rojas Magallanes (L4); la Línea 8 proyecta una estación en Tobalaba con Rojas Magallanes a pasos del edificio.",
     amenidades: ["Quincho", "Gimnasio", "Piscina", "Sala multiuso"],
     tipologias: [
       t("a", "1D1B", 1, 1, 37, 5, 2490, "Norte", 32),
