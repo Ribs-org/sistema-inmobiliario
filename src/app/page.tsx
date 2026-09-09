@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ESTACIONES, type EstacionConLinea } from "@/data/metro";
 import type { Tipologia } from "@/data/proyectos";
@@ -156,9 +157,18 @@ export default function Home() {
             </button>
           ))}
         </nav>
-        <div className="hidden text-right text-xs sm:block" title={`Fuente: ${infoUF.fuente}`}>
-          <span className="text-ink-muted">UF hoy </span>
-          <span className="font-semibold">{fmtCLP(infoUF.valor)}</span>
+        <div className="flex items-center gap-3">
+          <div className="hidden text-right text-xs sm:block" title={`Fuente: ${infoUF.fuente}`}>
+            <span className="text-ink-muted">UF hoy </span>
+            <span className="font-semibold">{fmtCLP(infoUF.valor)}</span>
+          </div>
+          <Link
+            href="/interno"
+            className="rounded-md border border-line px-2.5 py-1 text-xs font-medium text-ink-muted hover:border-ink hover:text-ink"
+            title="Área interna con clave"
+          >
+            🔒 Clientes
+          </Link>
         </div>
       </header>
 

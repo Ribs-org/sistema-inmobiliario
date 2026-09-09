@@ -31,4 +31,17 @@ npx vercel        # preview
 npx vercel --prod
 ```
 
-No requiere variables de entorno.
+Variables de entorno: `CLAVE_INTERNA` (clave del área interna) y las de Upstash Redis que crea la integración. El mapa y el simulador funcionan sin ninguna.
+
+## Área interna (clientes)
+
+`/interno` está protegida con una clave compartida (`CLAVE_INTERNA`; si no está definida se usa `ribs2026` y la pantalla lo avisa). La sesión dura 30 días en una cookie httpOnly; cambiar la clave invalida todas las sesiones.
+
+Desde ahí se lleva el seguimiento de clientes: proyecto y tipología de interés, etapa (nuevo → contactado → visita → reserva → promesa → escritura, o perdido), próximo contacto y notas. La lista se ordena por fecha de seguimiento y muestra atrasados y contactos del día. Desde la ficha de cualquier proyecto, el botón **+ Cliente** abre el formulario con el proyecto precargado.
+
+Los datos se guardan en **Upstash Redis** (integración de Vercel Marketplace, variables `KV_REST_API_URL` y `KV_REST_API_TOKEN`). Si no hay credenciales, la pantalla guarda en el navegador y lo indica.
+
+```bash
+vercel integration add upstash/upstash-kv --name ribs-clientes   # requiere aceptar términos en el navegador
+vercel env pull                                                   # para desarrollo local
+```

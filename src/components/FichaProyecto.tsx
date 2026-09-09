@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ETIQUETA_ESTADO, type EstacionConLinea } from "@/data/metro";
 import type { Tipologia } from "@/data/proyectos";
 import { fmtCLP, fmtDist, fmtM2, fmtUF } from "@/lib/format";
@@ -33,13 +34,22 @@ export default function FichaProyecto({
         >
           ← Proyectos
         </button>
-        <button
-          type="button"
-          onClick={onVerEnMapa}
-          className="rounded-md px-2 py-1 text-sm font-medium text-accent hover:bg-accent-soft"
-        >
-          Centrar en el mapa
-        </button>
+        <div className="flex items-center gap-1">
+          <Link
+            href={`/interno?nuevo=1&p=${p.id}`}
+            className="rounded-md px-2 py-1 text-sm text-ink-muted hover:bg-fondo hover:text-ink"
+            title="Registrar un cliente interesado en este proyecto"
+          >
+            + Cliente
+          </Link>
+          <button
+            type="button"
+            onClick={onVerEnMapa}
+            className="rounded-md px-2 py-1 text-sm font-medium text-accent hover:bg-accent-soft"
+          >
+            Centrar en el mapa
+          </button>
+        </div>
       </div>
 
       <div className="space-y-5 px-4 py-4">
