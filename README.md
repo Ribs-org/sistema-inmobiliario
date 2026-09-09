@@ -1,0 +1,34 @@
+# Ribs · Proyectos y Metro de Santiago
+
+Prototipo jugable para una inmobiliaria: mapa de proyectos en Santiago de Chile con la red de Metro actual y futura, fichas con tipologías y un simulador de crédito hipotecario en UF y pesos.
+
+## Qué hace
+
+- **Mapa** (Leaflet, sin API key): 15 proyectos de ejemplo como pines con su precio desde. Líneas 1 a 6 del Metro operativas en trazo sólido; Línea 7 (en construcción, 2028), extensión L4 a Bajos de Mena, extensión L6, Línea 8 y Línea 9 (proyectadas) en trazo punteado. Cada línea se puede ocultar. Al hacer clic en una estación se dibuja un radio de 800 m y se resaltan los proyectos que quedan dentro.
+- **Ficha de proyecto**: 3 tipologías con precio en UF y CLP, UF/m², estación operativa más cercana y la estación futura que la mejora, condiciones de pie y bono pie.
+- **Precio vs Metro**: gráfico de UF/m² contra minutos caminando a la estación más cercana, con opción de contar líneas futuras.
+- **Simulador**: amortización francesa en UF, pie, bono pie, pie en cuotas hasta la entrega, plazo, tasa, seguros, gastos operacionales, renta mínima y tabla de amortización. El valor de la UF se toma de mindicador.cl y se puede editar.
+- **Enlaces compartibles**: `?p=<proyecto>`, `?e=<línea>:<estación>`, `?tab=simulador|analisis`.
+
+## Datos
+
+Todo es mock y vive en `src/data/`. Las coordenadas de las estaciones son aproximadas (±150 m) y los trazados de L8 y L9 son referenciales. Los precios son ilustrativos.
+
+## Desarrollo
+
+```bash
+npm install
+npm run dev      # http://localhost:3000
+npm test         # vitest: cálculo de crédito y geodistancias
+npm run build
+```
+
+## Deploy en Vercel
+
+```bash
+npx vercel login
+npx vercel        # preview
+npx vercel --prod
+```
+
+No requiere variables de entorno.
