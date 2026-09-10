@@ -112,11 +112,12 @@ export function proyectosDesdeCSV(texto: string): { proyectos: ProyectoImportado
   filas.slice(1).forEach((f, n) => {
     const nombre = celda(f, "proyecto");
     const id = celda(f, "proyecto_id") || nombre.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    if (!nombre) {
+    // Las filas siguientes de un proyecto pueden traer solo el id y la tipología.
+    let p = id ? porId.get(id) : undefined;
+    if (!p && !nombre) {
       errores.push(`Fila ${n + 2}: falta el nombre del proyecto`);
       return;
     }
-    let p = porId.get(id);
     if (!p) {
       const estadoTexto = celda(f, "estado").toLowerCase();
       p = {
@@ -144,7 +145,7 @@ export function proyectosDesdeCSV(texto: string): { proyectos: ProyectoImportado
     const precioUF = num(celda(f, "precio_uf"));
     const m2 = num(celda(f, "m2_utiles"));
     if (!tip || !precioUF || !m2) {
-      errores.push(`Fila ${n + 2} (${nombre}): la tipología necesita nombre, precio_uf y m2_utiles`);
+      errores.push(`Fila ${n + 2} (${p.nombre}): la tipología necesita nombre, precio_uf y m2_utiles`);
       return;
     }
     p.tipologias.push({
