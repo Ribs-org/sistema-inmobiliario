@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ComponentType, type FormEvent } from "react";
 import { ETIQUETA_ESTADO_VENTA, type EstadoVenta, type Proyecto, type Tipologia } from "@/data/proyectos";
 import { fmtUF } from "@/lib/format";
+import { proyectosDesdeCSV, proyectosDesdeJSON } from "@/lib/importar-proyectos";
 import { BadgeEstado } from "@/components/ui";
 
 type Props = {
@@ -102,6 +103,72 @@ export default function ProyectosInterno({ proyectos, origen, onCambio, onBloque
     }
   };
 
+  const [resultadoImport, setResultadoImport] = useState<{ importados: number; errores: string[] } | null>(
+    null,
+  );
+
+  const importarArchivo = async (archivo: File) => {
+    setOcupado("archivo");
+    setAviso(null);
+    setResultadoImport(null);
+    try {
+      const texto = await archivo.text();
+      const { proyectos: lista, errores } = archivo.name.toLowerCase().endsWith(".json")
+        ? proyectosDesdeJSON(texto)
+        : proyectosDesdeCSV(texto);
+      if (lista.length === 0) {
+        setResultadoImport({
+          importados: 0,
+          errores: errores.length ? errores : ["El archivo no tiene proyectos"],
+        });
+        return;
+      }
+      const r = await fetch("/api/proyectos", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ importar: lista }),
+      });
+      if (r.status === 401) {
+        onBloqueado();
+        return;
+      }
+      const j = (await r.json()) as {
+        proyectos?: Proyecto[];
+        origen?: "redis" | "muestra";
+        importados?: number;
+        errores?: string[];
+        error?: string;
+      };
+      if (!r.ok || !j.proyectos) throw new Error(j.error ?? "No se pudo importar");
+      onCambio(j.proyectos, j.origen ?? "redis");
+      setResultadoImport({ importados: j.importados ?? 0, errores: [...errores, ...(j.errores ?? [])] });
+    } catch (err) {
+      setAviso(err instanceof Error ? err.message : "No se pudo importar");
+    } finally {
+      setOcupado(null);
+    }
+  };
+
+  const exportar = () => {
+    const datos = JSON.stringify(
+      {
+        proyectos: proyectos.map((p) => {
+          const copia: Partial<Proyecto> = { ...p };
+          delete copia.caminatas;
+          return copia;
+        }),
+      },
+      null,
+      2,
+    );
+    const url = URL.createObjectURL(new Blob([datos], { type: "application/json" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `proyectos-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const eliminar = async (p: Proyecto) => {
     if (!window.confirm(`¿Eliminar "${p.nombre}"? Las cotizaciones guardadas seguirán mostrando sus datos.`))
       return;
@@ -144,19 +211,60 @@ export default function ProyectosInterno({ proyectos, origen, onCambio, onBloque
       )}
       {aviso && <p className="mb-4 rounded-md bg-warn/10 px-3 py-2 text-sm text-warn">{aviso}</p>}
 
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-ink-muted">
           {proyectos.length} {proyectos.length === 1 ? "proyecto" : "proyectos"}
           {origen === "redis" ? " guardados" : " de muestra"}
         </p>
-        <button
-          type="button"
-          onClick={() => setEditando(proyectoVacio())}
-          className="rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-accent"
-        >
-          Nuevo proyecto
-        </button>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <a href="/plantilla-proyectos.csv" download className="text-accent hover:underline">
+            Plantilla CSV
+          </a>
+          <a href="/plantilla-proyectos.json" download className="text-accent hover:underline">
+            Plantilla JSON
+          </a>
+          <button type="button" onClick={exportar} className="text-accent hover:underline">
+            Exportar JSON
+          </button>
+          <label className="cursor-pointer rounded-md border border-line px-3 py-1.5 text-sm hover:border-ink">
+            {ocupado === "archivo" ? "Importando…" : "Importar archivo"}
+            <input
+              type="file"
+              accept=".csv,.json,text/csv,application/json"
+              disabled={ocupado !== null}
+              onChange={(e) => {
+                const a = e.target.files?.[0];
+                e.target.value = "";
+                if (a) importarArchivo(a);
+              }}
+              className="hidden"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => setEditando(proyectoVacio())}
+            className="rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-accent"
+          >
+            Nuevo proyecto
+          </button>
+        </div>
       </div>
+      {resultadoImport && (
+        <div className="mb-4 rounded-md border border-line bg-panel px-3 py-2 text-sm">
+          <p>
+            {resultadoImport.importados}{" "}
+            {resultadoImport.importados === 1 ? "proyecto importado" : "proyectos importados"}
+            {resultadoImport.errores.length ? ` · ${resultadoImport.errores.length} con problemas:` : "."}
+          </p>
+          {resultadoImport.errores.length > 0 && (
+            <ul className="mt-1 list-disc pl-5 text-xs text-warn">
+              {resultadoImport.errores.slice(0, 10).map((e, i) => (
+                <li key={i}>{e}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <div className={`grid gap-5 ${editando ? "xl:grid-cols-[1fr_520px]" : ""}`}>
         <div className="overflow-hidden rounded-xl border border-line bg-panel">

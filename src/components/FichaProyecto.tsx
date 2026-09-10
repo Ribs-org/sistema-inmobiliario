@@ -6,6 +6,7 @@ import type { Tipologia } from "@/data/proyectos";
 import { fmtCLP, fmtDist, fmtM2, fmtUF } from "@/lib/format";
 import type { EstacionCercana } from "@/lib/geo";
 import type { ProyectoEnriquecido } from "@/lib/proyectos";
+import Galeria from "./Galeria";
 import { BadgeEstado, Dato, EtiquetaLinea } from "./ui";
 
 type Props = {
@@ -66,24 +67,7 @@ export default function FichaProyecto({
           <p className="text-xs text-ink-faint">{p.inmobiliaria}</p>
         </header>
 
-        {p.imagenes && p.imagenes.length > 0 && (
-          <div>
-            <a href={p.imagenes[0]} target="_blank" rel="noreferrer" title="Ver foto en tamaño completo">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.imagenes[0]} alt={p.nombre} className="h-44 w-full rounded-lg object-cover" />
-            </a>
-            {p.imagenes.length > 1 && (
-              <div className="mt-1.5 flex gap-1.5 overflow-x-auto">
-                {p.imagenes.slice(1).map((u) => (
-                  <a key={u} href={u} target="_blank" rel="noreferrer" className="shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={u} alt="" className="h-14 w-20 rounded-md object-cover" loading="lazy" />
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {p.imagenes && p.imagenes.length > 0 && <Galeria imagenes={p.imagenes} titulo={p.nombre} />}
 
         <p className="text-sm leading-relaxed text-ink">{p.descripcion}</p>
 

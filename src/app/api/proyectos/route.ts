@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import type { Proyecto } from "@/data/proyectos";
 import { COOKIE_SESION, sesionValida } from "@/lib/acceso";
 import { calcularCaminatas } from "@/lib/caminatas";
 import {
@@ -33,6 +34,39 @@ export async function POST(req: NextRequest) {
   if (body?.importarMuestra) {
     const lista = await guardarProyectos(proyectosMuestra());
     return NextResponse.json({ proyectos: lista, origen: "redis" });
+  }
+
+  // Importación masiva: {importar: [...]} con proyectos en el formato de la plantilla.
+  if (Array.isArray(body?.importar)) {
+    const errores: string[] = [];
+    const validos: Proyecto[] = [];
+    const guardados = await listarProyectosGuardados();
+    for (const [i, entrada] of (body.importar as unknown[]).slice(0, 100).entries()) {
+      const p = normalizarProyecto(entrada);
+      if (!p) {
+        const nombre = (entrada as { nombre?: string })?.nombre ?? `fila ${i + 1}`;
+        errores.push(`${nombre}: faltan nombre, ubicación o tipologías válidas`);
+        continue;
+      }
+      const previo = guardados.find((x) => x.id === p.id);
+      const misma = previo && previo.lat === p.lat && previo.lng === p.lng;
+      p.caminatas = await calcularCaminatas(p, misma ? (previo.caminatas ?? {}) : {});
+      if (previo) {
+        p.imagenes = p.imagenes ?? previo.imagenes;
+        p.tipologias = p.tipologias.map((t) => ({
+          ...t,
+          plano: t.plano ?? previo.tipologias.find((x) => x.id === t.id || x.nombre === t.nombre)?.plano,
+        }));
+      }
+      validos.push(p);
+    }
+    const lista = validos.length ? await guardarProyectos(validos) : guardados;
+    return NextResponse.json({
+      proyectos: lista,
+      origen: lista.length ? "redis" : "muestra",
+      importados: validos.length,
+      errores,
+    });
   }
 
   const proyecto = normalizarProyecto(body);

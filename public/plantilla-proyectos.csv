@@ -1,0 +1,7 @@
+﻿proyecto_id;proyecto;inmobiliaria;comuna;direccion;lat;lng;estado;entrega;pisos;unidades;pie_minimo_pct;bono_pie_pct;pie_en_cuotas;descripcion;amenidades;tipologia;dormitorios;banos;m2_utiles;m2_terraza;precio_uf;orientacion;disponibles
+edificio-plaza-nunoa;Edificio Plaza Ñuñoa;Inmobiliaria Ejemplo;Ñuñoa;Av. Irarrázaval 3000;-33,4561;-70,6098;En verde;Segundo semestre 2027;15;120;10;5;sí;A dos cuadras de Plaza Ñuñoa, frente a la estación Chile España.;Quincho, Gimnasio, Bicicletero, Lavandería;1D1B;1;1;38,5;4;3.400;Norte;12
+edificio-plaza-nunoa;;;;;;;;;;;;;;;;2D1B;2;1;49;6;4.600;Oriente;18
+edificio-plaza-nunoa;;;;;;;;;;;;;;;;2D2B;2;2;61;8;5.900;Norponiente;7
+parque-la-florida;Parque La Florida;Constructora Ejemplo;La Florida;Av. Vicuña Mackenna 7500;-33,5210;-70,5990;Entrega inmediata;Inmediata;20;240;10;10;no;A pasos de Bellavista de La Florida (L5) y del Mall Plaza Vespucio.;Piscina, Quincho, Sala multiuso, Conserjería 24 h;1D1B;1;1;36;5;2.650;Poniente;9
+parque-la-florida;;;;;;;;;;;;;;;;2D2B;2;2;56;7;3.850;Norte;14
+parque-la-florida;;;;;;;;;;;;;;;;3D2B;3;2;72;9;4.900;Oriente;5

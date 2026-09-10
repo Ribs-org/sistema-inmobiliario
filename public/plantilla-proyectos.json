@@ -1,0 +1,50 @@
+{
+  "proyectos": [
+    {
+      "id": "edificio-plaza-nunoa",
+      "nombre": "Edificio Plaza Ñuñoa",
+      "inmobiliaria": "Inmobiliaria Ejemplo",
+      "comuna": "Ñuñoa",
+      "direccion": "Av. Irarrázaval 3000",
+      "lat": -33.4561,
+      "lng": -70.6098,
+      "estado": "en-verde",
+      "entrega": "Segundo semestre 2027",
+      "pisos": 15,
+      "unidades": 120,
+      "pieMinimoPct": 10,
+      "bonoPiePct": 5,
+      "pieEnCuotas": true,
+      "descripcion": "A dos cuadras de Plaza Ñuñoa, frente a la estación Chile España.",
+      "amenidades": ["Quincho", "Gimnasio", "Bicicletero", "Lavandería"],
+      "tipologias": [
+        { "id": "a", "nombre": "1D1B", "dormitorios": 1, "banos": 1, "m2Utiles": 38.5, "m2Terraza": 4, "precioUF": 3400, "orientacion": "Norte", "disponibles": 12 },
+        { "id": "b", "nombre": "2D1B", "dormitorios": 2, "banos": 1, "m2Utiles": 49, "m2Terraza": 6, "precioUF": 4600, "orientacion": "Oriente", "disponibles": 18 },
+        { "id": "c", "nombre": "2D2B", "dormitorios": 2, "banos": 2, "m2Utiles": 61, "m2Terraza": 8, "precioUF": 5900, "orientacion": "Norponiente", "disponibles": 7 }
+      ]
+    },
+    {
+      "id": "parque-la-florida",
+      "nombre": "Parque La Florida",
+      "inmobiliaria": "Constructora Ejemplo",
+      "comuna": "La Florida",
+      "direccion": "Av. Vicuña Mackenna 7500",
+      "lat": -33.521,
+      "lng": -70.599,
+      "estado": "entrega-inmediata",
+      "entrega": "Inmediata",
+      "pisos": 20,
+      "unidades": 240,
+      "pieMinimoPct": 10,
+      "bonoPiePct": 10,
+      "pieEnCuotas": false,
+      "descripcion": "A pasos de Bellavista de La Florida (L5) y del Mall Plaza Vespucio.",
+      "amenidades": ["Piscina", "Quincho", "Sala multiuso", "Conserjería 24 h"],
+      "tipologias": [
+        { "id": "a", "nombre": "1D1B", "dormitorios": 1, "banos": 1, "m2Utiles": 36, "m2Terraza": 5, "precioUF": 2650, "orientacion": "Poniente", "disponibles": 9 },
+        { "id": "b", "nombre": "2D2B", "dormitorios": 2, "banos": 2, "m2Utiles": 56, "m2Terraza": 7, "precioUF": 3850, "orientacion": "Norte", "disponibles": 14 },
+        { "id": "c", "nombre": "3D2B", "dormitorios": 3, "banos": 2, "m2Utiles": 72, "m2Terraza": 9, "precioUF": 4900, "orientacion": "Oriente", "disponibles": 5 }
+      ]
+    }
+  ]
+}

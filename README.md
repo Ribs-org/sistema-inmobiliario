@@ -67,3 +67,9 @@ En la lista del mapa cada proyecto tiene una casilla para compararlo (hasta 3). 
 ## Fotos y planos
 
 Las imágenes viven en **Vercel Blob** (store `pyxis-imagenes`, público; variable `BLOB_READ_WRITE_TOKEN`). En el área interna, cada proyecto acepta hasta 12 fotos (JPG, PNG, WebP o AVIF de hasta 8 MB; la primera es la principal y se pueden reordenar) y cada tipología un plano (imagen o PDF). Se muestran en la ficha, en el comparador y en la cotización. La API `/api/imagenes` solo acepta subidas con sesión y solo guarda URLs de ese store.
+
+## Importar proyectos desde un archivo
+
+En Proyectos hay **Importar archivo** (CSV o JSON) y dos plantillas de muestra para descargar: `plantilla-proyectos.csv` (para Excel: separador `;`, decimales con coma, una fila por tipología; las filas de un mismo `proyecto_id` se agrupan y los datos del proyecto se toman de la primera) y `plantilla-proyectos.json` (mismo formato que **Exportar JSON**, útil como respaldo o para editar en bloque). Los proyectos con el mismo id se actualizan conservando sus fotos y planos; al importar se calculan las caminatas de cada uno, así que tarda unos segundos por proyecto. Las filas con problemas se informan sin detener el resto.
+
+Las fotos se optimizan al subir (máximo 1600 px por lado, orientación corregida, WebP) y la ficha las muestra en una galería con visor (flechas o teclado, Esc para cerrar).
