@@ -10,6 +10,7 @@ import type { Cotizacion } from "@/lib/cotizaciones-store";
 import { CARGA_MAXIMA_RENTA, cuotaPie, simularCredito } from "@/lib/credito";
 import { fmtCLP, fmtDist, fmtM2, fmtUF } from "@/lib/format";
 import type { ProyectoEnriquecido } from "@/lib/proyectos";
+import Marca from "./Marca";
 import VistaComparativa from "./VistaComparativa";
 
 type Props = {
@@ -73,10 +74,10 @@ function VistaIndividual({ cotizacion: c, proyecto: p, contacto }: Omit<Props, "
           </button>
         </div>
 
-        <article className="rounded-xl border border-line bg-panel p-6 shadow-sm print:rounded-none print:border-0 print:shadow-none sm:p-8">
-          <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-5">
+        <article className="rounded-xl border border-line border-t-4 border-t-oro bg-panel p-6 shadow-sm print:rounded-none print:border-0 print:shadow-none sm:p-8">
+          <header className="flex flex-wrap items-start justify-between gap-4 border-b border-oro/40 pb-5">
             <div>
-              <div className="display text-xl font-bold tracking-tight">Pyxis</div>
+              <Marca tono="negro" tamano="lg" />
               <h1 className="mt-1 text-2xl font-semibold">Cotización</h1>
               <p className="text-sm text-ink-muted">
                 Para {c.clienteNombre}
@@ -176,7 +177,7 @@ function VistaIndividual({ cotizacion: c, proyecto: p, contacto }: Omit<Props, "
 
           <section className="mt-6">
             <h3 className="text-sm font-semibold">Simulación de crédito hipotecario</h3>
-            <div className="mt-2 rounded-xl bg-ink p-5 text-white">
+            <div className="mt-2 rounded-xl border-l-4 border-oro bg-negro p-5 text-white">
               <div className="text-sm text-white/70">
                 Dividendo mensual{pr.incluirSeguros ? " con seguros" : ""}
               </div>

@@ -292,7 +292,7 @@ export default function Simulador({
 
           {/* ---------------- resultados ---------------- */}
           <div className="space-y-5">
-            <section className="rounded-xl bg-ink p-5 text-white">
+            <section className="rounded-xl border-l-4 border-oro bg-negro p-5 text-white">
               <div className="text-sm text-white/70">
                 Dividendo mensual{incluirSeguros ? " con seguros" : ""}
               </div>

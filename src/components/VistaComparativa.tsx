@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { Cotizacion } from "@/lib/cotizaciones-store";
 import { fmtCLP } from "@/lib/format";
 import type { ProyectoEnriquecido } from "@/lib/proyectos";
+import Marca from "./Marca";
 import TablaComparativa from "./TablaComparativa";
 
 type Props = {
@@ -46,10 +47,10 @@ export default function VistaComparativa({ cotizacion: c, proyectos, contacto, f
           </button>
         </div>
 
-        <article className="rounded-xl border border-line bg-panel p-6 shadow-sm print:rounded-none print:border-0 print:shadow-none sm:p-8">
-          <header className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-5">
+        <article className="rounded-xl border border-line border-t-4 border-t-oro bg-panel p-6 shadow-sm print:rounded-none print:border-0 print:shadow-none sm:p-8">
+          <header className="flex flex-wrap items-start justify-between gap-4 border-b border-oro/40 pb-5">
             <div>
-              <div className="display text-xl font-bold tracking-tight">Pyxis</div>
+              <Marca tono="negro" tamano="lg" />
               <h1 className="mt-1 text-2xl font-semibold">Cotización comparativa</h1>
               <p className="text-sm text-ink-muted">
                 Para {c.clienteNombre}

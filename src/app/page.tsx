@@ -22,6 +22,7 @@ import Analitica from "@/components/Analitica";
 import Comparador from "@/components/Comparador";
 import FichaProyecto from "@/components/FichaProyecto";
 import LeyendaMetro from "@/components/LeyendaMetro";
+import Marca from "@/components/Marca";
 import Mapa from "@/components/MapaCliente";
 import type { CapasMapa, Enfoque } from "@/components/Mapa";
 import PanelProyectos from "@/components/PanelProyectos";
@@ -188,13 +189,13 @@ export default function Home() {
 
   return (
     <div className="flex h-full min-w-0 flex-col overflow-hidden">
-      <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-line bg-panel px-4">
-        <div className="flex items-baseline gap-2">
-          <span className="display text-lg font-bold tracking-tight">Pyxis</span>
-          <span className="hidden text-sm text-ink-muted sm:inline">Proyectos y Metro · Santiago</span>
+      <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-oro/30 bg-negro px-4 text-white">
+        <div className="flex items-center gap-3">
+          <Marca />
+          <span className="hidden text-sm text-white/60 sm:inline">Proyectos y Metro · Santiago</span>
         </div>
         <nav
-          className="flex min-w-0 shrink gap-1 overflow-x-auto rounded-md bg-fondo p-0.5"
+          className="flex min-w-0 shrink gap-1 overflow-x-auto rounded-md bg-white/10 p-0.5"
           aria-label="Secciones"
         >
           {PESTANAS.map((t) => (
@@ -204,7 +205,7 @@ export default function Home() {
               onClick={() => setPestana(t.id)}
               aria-current={pestana === t.id ? "page" : undefined}
               className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
-                pestana === t.id ? "bg-panel text-ink shadow-sm" : "text-ink-muted hover:text-ink"
+                pestana === t.id ? "bg-oro text-negro" : "text-white/70 hover:text-white"
               }`}
             >
               {t.id === "comparar" && comparar.length > 0 ? `Comparar (${comparar.length})` : t.nombre}
@@ -213,12 +214,12 @@ export default function Home() {
         </nav>
         <div className="flex items-center gap-3">
           <div className="hidden text-right text-xs sm:block" title={`Fuente: ${infoUF.fuente}`}>
-            <span className="text-ink-muted">UF hoy </span>
-            <span className="font-semibold">{fmtCLP(infoUF.valor)}</span>
+            <span className="text-white/60">UF hoy </span>
+            <span className="font-semibold text-oro-claro">{fmtCLP(infoUF.valor)}</span>
           </div>
           <Link
             href="/interno"
-            className="rounded-md border border-line px-2.5 py-1 text-xs font-medium text-ink-muted hover:border-ink hover:text-ink"
+            className="rounded-md border border-oro/60 px-2.5 py-1 text-xs font-medium text-oro hover:bg-oro hover:text-negro"
             title="Área interna con clave"
           >
             🔒 Clientes

@@ -1,15 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, IBM_Plex_Sans } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+// Tipografías de Broker Capital: Playfair Display para títulos e Inter para la interfaz.
+const bricolage = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
   weight: ["500", "600", "700"],
 });
 
-const plex = IBM_Plex_Sans({
-  variable: "--font-plex",
+const plex = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
 });
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1b2430",
+  themeColor: "#0a0a0a",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

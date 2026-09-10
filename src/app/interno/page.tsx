@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { clientesDemo } from "@/data/clientes-demo";
 import type { Proyecto } from "@/data/proyectos";
 import { proyectosMuestra } from "@/data/proyectos-muestra";
+import Marca from "@/components/Marca";
 import Embudo from "@/components/interno/Embudo";
 import ProyectosInterno from "@/components/interno/ProyectosInterno";
 import type { Cotizacion } from "@/lib/cotizaciones-store";
@@ -306,12 +307,12 @@ export default function Interno() {
 
   if (auth === "bloqueado") {
     return (
-      <div className="flex min-h-full items-center justify-center p-6">
+      <div className="flex min-h-full items-center justify-center bg-negro p-6">
         <form
           onSubmit={entrar}
-          className="w-full max-w-sm rounded-xl border border-line bg-panel p-6 shadow-sm"
+          className="w-full max-w-sm rounded-xl border-t-4 border-oro bg-panel p-6 shadow-2xl"
         >
-          <div className="display text-lg font-bold">Pyxis</div>
+          <Marca tono="negro" />
           <h1 className="mt-3 text-2xl font-semibold">Área interna</h1>
           <p className="mt-1 text-sm text-ink-muted">
             Seguimiento de clientes. Solo para el equipo comercial.
@@ -350,12 +351,12 @@ export default function Interno() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-line bg-panel px-4">
-        <div className="flex items-baseline gap-2">
-          <span className="display text-lg font-bold tracking-tight">Pyxis</span>
-          <span className="hidden text-sm text-ink-muted sm:inline">Área interna</span>
+      <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-oro/30 bg-negro px-4 text-white">
+        <div className="flex items-center gap-3">
+          <Marca />
+          <span className="hidden text-sm text-white/60 sm:inline">Área interna</span>
         </div>
-        <nav className="flex gap-1 rounded-md bg-fondo p-0.5" aria-label="Secciones">
+        <nav className="flex gap-1 rounded-md bg-white/10 p-0.5" aria-label="Secciones">
           {SECCIONES.map((s) => (
             <button
               key={s.id}
@@ -363,7 +364,7 @@ export default function Interno() {
               onClick={() => setSeccion(s.id)}
               aria-current={seccion === s.id ? "page" : undefined}
               className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
-                seccion === s.id ? "bg-panel text-ink shadow-sm" : "text-ink-muted hover:text-ink"
+                seccion === s.id ? "bg-oro text-negro" : "text-white/70 hover:text-white"
               }`}
             >
               {s.nombre}
@@ -371,10 +372,10 @@ export default function Interno() {
           ))}
         </nav>
         <nav className="flex items-center gap-3 text-sm">
-          <Link href="/" className="text-ink-muted hover:text-ink">
+          <Link href="/" className="text-white/70 hover:text-white">
             Mapa
           </Link>
-          <button type="button" onClick={salir} className="text-ink-muted hover:text-ink">
+          <button type="button" onClick={salir} className="text-white/70 hover:text-white">
             Salir
           </button>
         </nav>

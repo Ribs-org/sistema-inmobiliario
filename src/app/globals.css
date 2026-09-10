@@ -1,22 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  --color-fondo: #edeff2;
+  /* Paleta Broker Capital: negro profundo y dorado, sobre un fondo cálido neutro. */
+  --color-fondo: #f1efe9;
   --color-panel: #ffffff;
-  --color-ink: #1b2430;
-  --color-ink-muted: #5b6675;
-  --color-ink-faint: #8d95a1;
-  --color-line: #d5dae1;
-  --color-line-soft: #e6e9ee;
-  --color-accent: #0e4f5c;
-  --color-accent-soft: #e1eef0;
-  --color-select: #f2a900;
-  --color-select-soft: #fff3d1;
+  --color-ink: #0f0f0f;
+  --color-ink-muted: #5a5a57;
+  --color-ink-faint: #8f8d86;
+  --color-line: #d9d5cb;
+  --color-line-soft: #e9e6de;
+  --color-accent: #9c7f22;
+  --color-accent-soft: #f2e6c9;
+  --color-select: #d4af37;
+  --color-select-soft: #f8f0d8;
+  --color-oro: #d4af37;
+  --color-oro-claro: #e0bf74;
+  --color-negro: #0a0a0a;
   --color-ok: #1f7a4d;
   --color-warn: #b45309;
 
-  --font-display: var(--font-bricolage), "Segoe UI", sans-serif;
-  --font-sans: var(--font-plex), "Segoe UI", sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-inter), "Segoe UI", sans-serif;
 }
 
 html,
@@ -89,7 +93,7 @@ h3,
   color: #fff;
   font: 600 12px/1.2 var(--font-sans);
   white-space: nowrap;
-  box-shadow: 0 2px 6px rgba(27, 36, 48, 0.28);
+  box-shadow: 0 2px 6px rgba(10, 10, 10, 0.3);
   transition:
     transform 120ms ease,
     background 120ms ease;
