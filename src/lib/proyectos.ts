@@ -1,4 +1,5 @@
-import { PROYECTOS, type Proyecto } from "@/data/proyectos";
+import type { Proyecto } from "@/data/proyectos";
+import { proyectosMuestra } from "@/data/proyectos-muestra";
 import { metroCercano, type EstacionCercana } from "@/lib/geo";
 
 export type ProyectoEnriquecido = Proyecto & {
@@ -14,8 +15,8 @@ export type ProyectoEnriquecido = Proyecto & {
   minConFuturo: number;
 };
 
-export const PROYECTOS_ENRIQUECIDOS: ProyectoEnriquecido[] = PROYECTOS.map((p) => {
-  const { actual, futura } = metroCercano(p, p.id);
+export function enriquecer(p: Proyecto): ProyectoEnriquecido {
+  const { actual, futura } = metroCercano(p, p.caminatas);
   const precios = p.tipologias.map((t) => t.precioUF);
   const ufm2 = p.tipologias.map((t) => t.precioUF / t.m2Utiles);
   const minActual = actual ? actual.minutos : 99;
@@ -31,7 +32,16 @@ export const PROYECTOS_ENRIQUECIDOS: ProyectoEnriquecido[] = PROYECTOS.map((p) =
     minActual,
     minConFuturo: Math.min(minActual, minFuturo),
   };
-});
+}
+
+export const enriquecerTodos = (lista: Proyecto[]) => lista.map(enriquecer);
+
+/** Proyectos de muestra ya enriquecidos (estado inicial y tests). */
+export const PROYECTOS_ENRIQUECIDOS: ProyectoEnriquecido[] = enriquecerTodos(proyectosMuestra());
+
+export function comunasDe(lista: Proyecto[]): string[] {
+  return Array.from(new Set(lista.map((p) => p.comuna))).sort((a, b) => a.localeCompare(b, "es"));
+}
 
 export type Filtros = {
   comuna: string | "todas";

@@ -5,6 +5,7 @@ import { CARGA_MAXIMA_RENTA, cuotaPie, simularCredito } from "@/lib/credito";
 import { fmtCLP, fmtPct, fmtUF } from "@/lib/format";
 import type { InfoTasa } from "@/lib/tasa";
 import type { InfoUF } from "@/lib/uf";
+import GuardarCotizacion from "./GuardarCotizacion";
 import { Interruptor } from "./ui";
 
 export type PresetSimulador = {
@@ -14,6 +15,10 @@ export type PresetSimulador = {
   piePct: number;
   bonoPiePct: number;
   pieEnCuotas: boolean;
+  proyectoId: string;
+  proyectoNombre: string;
+  tipologiaId: string | null;
+  tipologiaNombre: string | null;
 };
 
 type Props = {
@@ -23,11 +28,22 @@ type Props = {
   onCambiarUF: (v: number) => void;
   preset: PresetSimulador | null;
   onQuitarPreset: () => void;
+  /** Sesión interna abierta: permite guardar la cotización */
+  autorizado?: boolean;
 };
 
 const PLAZOS = [15, 20, 25, 30];
 
-export default function Simulador({ valorUF, infoUF, infoTasa, onCambiarUF, preset, onQuitarPreset }: Props) {
+export default function Simulador({
+  valorUF,
+  infoUF,
+  infoTasa,
+  onCambiarUF,
+  preset,
+  onQuitarPreset,
+  autorizado = false,
+}: Props) {
+  const [guardandoCotizacion, setGuardandoCotizacion] = useState(false);
   const [precioUF, setPrecioUF] = useState(preset?.precioUF ?? 4000);
   const [piePct, setPiePct] = useState(preset?.piePct ?? 20);
   const [bonoPiePct, setBonoPiePct] = useState(preset?.bonoPiePct ?? 0);
@@ -90,14 +106,46 @@ export default function Simulador({ valorUF, infoUF, infoTasa, onCambiarUF, pres
             </p>
           </div>
           {preset && (
-            <div className="flex items-center gap-2 rounded-full border border-select bg-select-soft px-3 py-1 text-xs">
-              <span>{preset.etiqueta}</span>
-              <button type="button" onClick={onQuitarPreset} className="font-semibold hover:underline">
-                Quitar
-              </button>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 rounded-full border border-select bg-select-soft px-3 py-1 text-xs">
+                <span>{preset.etiqueta}</span>
+                <button type="button" onClick={onQuitarPreset} className="font-semibold hover:underline">
+                  Quitar
+                </button>
+              </div>
+              {autorizado && (
+                <button
+                  type="button"
+                  onClick={() => setGuardandoCotizacion(true)}
+                  className="rounded-md bg-ink px-3 py-1.5 text-xs font-medium text-white hover:bg-accent"
+                >
+                  Guardar cotización
+                </button>
+              )}
             </div>
           )}
         </header>
+
+        {guardandoCotizacion && preset && (
+          <GuardarCotizacion
+            proyectoId={preset.proyectoId}
+            proyectoNombre={preset.proyectoNombre}
+            tipologiaId={preset.tipologiaId}
+            tipologiaNombre={preset.tipologiaNombre}
+            parametros={{
+              precioUF,
+              piePct,
+              bonoPiePct,
+              plazoAnios,
+              tasaAnualPct,
+              valorUF,
+              incluirSeguros,
+              pieEnCuotas,
+              mesesEntrega,
+            }}
+            onCerrar={() => setGuardandoCotizacion(false)}
+          />
+        )}
 
         <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
           {/* ---------------- formulario ---------------- */}

@@ -1,5 +1,4 @@
 import { claveEstacion, ESTACIONES, type EstacionConLinea } from "@/data/metro";
-import caminatas from "@/data/caminatas.json" with { type: "json" };
 
 export type Punto = { lat: number; lng: number };
 
@@ -42,12 +41,11 @@ export type EstacionCercana = {
   fuente: "ruta" | "estimada";
 };
 
-type Caminatas = Record<string, Record<string, { metros: number }>>;
-const CAMINATAS = (caminatas as { rutas: Caminatas }).rutas;
+export type CaminatasProyecto = Record<string, { metros: number }>;
 
-function evaluar(p: Punto, estacion: EstacionConLinea, proyectoId?: string): EstacionCercana {
+function evaluar(p: Punto, estacion: EstacionConLinea, caminatas?: CaminatasProyecto): EstacionCercana {
   const recta = distanciaM(p, estacion);
-  const ruta = proyectoId ? CAMINATAS[proyectoId]?.[claveEstacion(estacion)] : undefined;
+  const ruta = caminatas?.[claveEstacion(estacion)];
   const caminataM = ruta ? ruta.metros : recta * FACTOR_RODEO;
   return {
     estacion,
@@ -65,28 +63,28 @@ function evaluar(p: Punto, estacion: EstacionConLinea, proyectoId?: string): Est
 export function estacionMasCercana(
   p: Punto,
   estaciones: EstacionConLinea[] = ESTACIONES,
-  proyectoId?: string,
+  caminatas?: CaminatasProyecto,
 ): EstacionCercana | null {
   if (estaciones.length === 0) return null;
   const candidatas = estaciones
     .map((e) => ({ e, d: distanciaM(p, e) }))
     .sort((a, b) => a.d - b.d)
     .slice(0, 5)
-    .map(({ e }) => evaluar(p, e, proyectoId));
+    .map(({ e }) => evaluar(p, e, caminatas));
   return candidatas.sort((a, b) => a.caminataM - b.caminataM)[0];
 }
 
 /** Estación operativa más cercana y estación futura más cercana (si mejora la actual). */
-export function metroCercano(p: Punto, proyectoId?: string) {
+export function metroCercano(p: Punto, caminatas?: CaminatasProyecto) {
   const actual = estacionMasCercana(
     p,
     ESTACIONES.filter((s) => s.estado === "operativa"),
-    proyectoId,
+    caminatas,
   );
   const futuraCandidata = estacionMasCercana(
     p,
     ESTACIONES.filter((s) => s.estado !== "operativa"),
-    proyectoId,
+    caminatas,
   );
   const futura =
     futuraCandidata && (!actual || futuraCandidata.caminataM < actual.caminataM) ? futuraCandidata : null;

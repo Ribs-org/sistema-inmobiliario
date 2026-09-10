@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { clientesDemo } from "@/data/clientes-demo";
-import { PROYECTOS } from "@/data/proyectos";
+import type { Proyecto } from "@/data/proyectos";
+import { proyectosMuestra } from "@/data/proyectos-muestra";
+import ProyectosInterno from "@/components/interno/ProyectosInterno";
+import type { Cotizacion } from "@/lib/cotizaciones-store";
 import {
   ETAPAS,
   ETAPAS_ACTIVAS,
@@ -67,13 +70,15 @@ function etiquetaFecha(fecha: string | null): {
   return { texto: `En ${dias} días`, tono: "normal" };
 }
 
-function nombreProyecto(id: string | null) {
-  return PROYECTOS.find((p) => p.id === id)?.nombre ?? "Sin proyecto";
+function nombreProyecto(lista: Proyecto[], id: string | null) {
+  return lista.find((p) => p.id === id)?.nombre ?? "Sin proyecto";
 }
 
-function nombreTipologia(proyectoId: string | null, tipId: string | null) {
-  return PROYECTOS.find((p) => p.id === proyectoId)?.tipologias.find((t) => t.id === tipId)?.nombre ?? null;
+function nombreTipologia(lista: Proyecto[], proyectoId: string | null, tipId: string | null) {
+  return lista.find((p) => p.id === proyectoId)?.tipologias.find((t) => t.id === tipId)?.nombre ?? null;
 }
+
+type Seccion = "clientes" | "proyectos";
 
 export default function Interno() {
   const [auth, setAuth] = useState<Auth>("cargando");
@@ -87,6 +92,9 @@ export default function Interno() {
   const [editando, setEditando] = useState<Cliente | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [seccion, setSeccion] = useState<Seccion>("clientes");
+  const [proyectos, setProyectos] = useState<Proyecto[]>(proyectosMuestra());
+  const [origenProyectos, setOrigenProyectos] = useState<"redis" | "muestra">("muestra");
 
   const cargar = useCallback(async () => {
     const r = await fetch("/api/clientes");
@@ -98,6 +106,15 @@ export default function Interno() {
     setAlmacenamiento(j.almacenamiento);
     setClientes(j.almacenamiento === "redis" ? j.clientes : leerLocal());
     setAuth("abierto");
+    fetch("/api/proyectos")
+      .then((r) => r.json())
+      .then((jp: { proyectos: Proyecto[]; origen: "redis" | "muestra" }) => {
+        if (Array.isArray(jp.proyectos)) {
+          setProyectos(jp.proyectos);
+          setOrigenProyectos(jp.origen);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -123,7 +140,7 @@ export default function Interno() {
       const q = new URLSearchParams(window.location.search);
       if (q.get("nuevo") !== "1") return;
       const proyectoId = q.get("p");
-      const proyecto = PROYECTOS.find((p) => p.id === proyectoId);
+      const proyecto = proyectos.find((p) => p.id === proyectoId);
       setEditando(
         nuevoCliente({
           proyectoId: proyecto?.id ?? null,
@@ -133,6 +150,7 @@ export default function Interno() {
       );
       window.history.replaceState(null, "", "/interno");
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo al abrir sesión
   }, [auth]);
 
   const entrar = async (e: FormEvent) => {
@@ -314,8 +332,23 @@ export default function Interno() {
       <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-line bg-panel px-4">
         <div className="flex items-baseline gap-2">
           <span className="display text-lg font-bold tracking-tight">Pyxis</span>
-          <span className="text-sm text-ink-muted">Clientes</span>
+          <span className="hidden text-sm text-ink-muted sm:inline">Área interna</span>
         </div>
+        <nav className="flex gap-1 rounded-md bg-fondo p-0.5" aria-label="Secciones">
+          {(["clientes", "proyectos"] as Seccion[]).map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setSeccion(s)}
+              aria-current={seccion === s ? "page" : undefined}
+              className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
+                seccion === s ? "bg-panel text-ink shadow-sm" : "text-ink-muted hover:text-ink"
+              }`}
+            >
+              {s === "clientes" ? "Clientes" : "Proyectos"}
+            </button>
+          ))}
+        </nav>
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/" className="text-ink-muted hover:text-ink">
             Mapa
@@ -328,144 +361,160 @@ export default function Interno() {
 
       <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-4 py-5 lg:px-8">
-          {almacenamiento === "ninguno" && (
+          {seccion === "proyectos" && (
+            <ProyectosInterno
+              proyectos={proyectos}
+              origen={origenProyectos}
+              onCambio={(lista, origen) => {
+                setProyectos(lista);
+                setOrigenProyectos(origen);
+              }}
+              onBloqueado={() => setAuth("bloqueado")}
+            />
+          )}
+          {seccion === "clientes" && almacenamiento === "ninguno" && (
             <p className="mb-4 rounded-md border border-select bg-select-soft px-3 py-2 text-sm">
               Guardando solo en este navegador. Conecta Upstash Redis en Vercel para compartir la lista entre
               dispositivos.
             </p>
           )}
-          {aviso && <p className="mb-4 rounded-md bg-warn/10 px-3 py-2 text-sm text-warn">{aviso}</p>}
+          {seccion === "clientes" && (
+            <>
+              {aviso && <p className="mb-4 rounded-md bg-warn/10 px-3 py-2 text-sm text-warn">{aviso}</p>}
 
-          <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Tile etiqueta="Atrasados" valor={resumen.atrasados} alerta={resumen.atrasados > 0} />
-            <Tile etiqueta="Para hoy" valor={resumen.hoy} />
-            <Tile etiqueta="Próximos 7 días" valor={resumen.semana} />
-            <Tile etiqueta="Clientes activos" valor={resumen.activos} />
-          </div>
+              <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <Tile etiqueta="Atrasados" valor={resumen.atrasados} alerta={resumen.atrasados > 0} />
+                <Tile etiqueta="Para hoy" valor={resumen.hoy} />
+                <Tile etiqueta="Próximos 7 días" valor={resumen.semana} />
+                <Tile etiqueta="Clientes activos" valor={resumen.activos} />
+              </div>
 
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtrar por etapa">
-              <Chip activo={filtro === "activos"} onClick={() => setFiltro("activos")}>
-                Activos
-              </Chip>
-              <Chip activo={filtro === "todos"} onClick={() => setFiltro("todos")}>
-                Todos
-              </Chip>
-              {ETAPAS.map((e) => (
-                <Chip key={e} activo={filtro === e} onClick={() => setFiltro(e)}>
-                  {ETIQUETA_ETAPA[e]}
-                </Chip>
-              ))}
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={cargarDemo}
-                disabled={guardando}
-                className="rounded-md border border-line px-3 py-1.5 text-sm text-ink-muted hover:border-ink hover:text-ink disabled:opacity-50"
-                title="Agrega clientes ficticios para probar la pantalla"
-              >
-                Cargar demo
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditando(nuevoCliente({ proximoContacto: hoyISO() }))}
-                className="rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-accent"
-              >
-                Nuevo cliente
-              </button>
-            </div>
-          </div>
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtrar por etapa">
+                  <Chip activo={filtro === "activos"} onClick={() => setFiltro("activos")}>
+                    Activos
+                  </Chip>
+                  <Chip activo={filtro === "todos"} onClick={() => setFiltro("todos")}>
+                    Todos
+                  </Chip>
+                  {ETAPAS.map((e) => (
+                    <Chip key={e} activo={filtro === e} onClick={() => setFiltro(e)}>
+                      {ETIQUETA_ETAPA[e]}
+                    </Chip>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={cargarDemo}
+                    disabled={guardando}
+                    className="rounded-md border border-line px-3 py-1.5 text-sm text-ink-muted hover:border-ink hover:text-ink disabled:opacity-50"
+                    title="Agrega clientes ficticios para probar la pantalla"
+                  >
+                    Cargar demo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditando(nuevoCliente({ proximoContacto: hoyISO() }))}
+                    className="rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-accent"
+                  >
+                    Nuevo cliente
+                  </button>
+                </div>
+              </div>
 
-          <div className={`grid gap-5 ${editando ? "lg:grid-cols-[1fr_380px]" : ""}`}>
-            <div className="overflow-hidden rounded-xl border border-line bg-panel">
-              {visibles.length === 0 ? (
-                <p className="px-4 py-10 text-center text-sm text-ink-muted">
-                  {clientes.length === 0
-                    ? "Todavía no hay clientes. Crea el primero con “Nuevo cliente”, desde la ficha de un proyecto, o carga la demo."
-                    : "Ningún cliente en esta etapa."}
-                </p>
-              ) : (
-                <table className="w-full text-sm">
-                  <thead className="bg-fondo/70 text-left text-xs text-ink-muted">
-                    <tr>
-                      <th className="px-4 py-2 font-medium">Cliente</th>
-                      <th className="hidden px-3 py-2 font-medium md:table-cell">Interés</th>
-                      <th className="px-3 py-2 font-medium">Etapa</th>
-                      <th className="px-3 py-2 font-medium">Próximo contacto</th>
-                      <th className="hidden px-3 py-2 font-medium lg:table-cell">Notas</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibles.map((c) => {
-                      const f = etiquetaFecha(c.proximoContacto);
-                      const tip = nombreTipologia(c.proyectoId, c.tipologiaId);
-                      return (
-                        <tr
-                          key={c.id}
-                          onClick={() => setEditando(c)}
-                          className={`cursor-pointer border-t border-line-soft hover:bg-fondo/60 ${
-                            editando?.id === c.id ? "bg-select-soft" : ""
-                          }`}
-                        >
-                          <td className="px-4 py-2.5">
-                            <div className="font-medium">{c.nombre}</div>
-                            <div className="text-xs text-ink-muted">
-                              {[c.telefono, c.email].filter(Boolean).join(" · ")}
-                            </div>
-                          </td>
-                          <td className="hidden px-3 py-2.5 md:table-cell">
-                            <div>{nombreProyecto(c.proyectoId)}</div>
-                            {tip && <div className="text-xs text-ink-muted">{tip}</div>}
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <span
-                              className={`rounded px-1.5 py-0.5 text-xs font-medium ${COLOR_ETAPA[c.etapa]}`}
-                            >
-                              {ETIQUETA_ETAPA[c.etapa]}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <span
-                              className={
-                                f.tono === "atrasado"
-                                  ? "font-semibold text-warn"
-                                  : f.tono === "hoy"
-                                    ? "font-semibold text-accent"
-                                    : f.tono === "vacio"
-                                      ? "text-ink-faint"
-                                      : ""
-                              }
-                            >
-                              {f.texto}
-                            </span>
-                            {c.proximoContacto && (
-                              <div className="text-xs text-ink-faint">{c.proximoContacto}</div>
-                            )}
-                          </td>
-                          <td className="hidden max-w-xs truncate px-3 py-2.5 text-ink-muted lg:table-cell">
-                            {c.notas}
-                          </td>
+              <div className={`grid gap-5 ${editando ? "lg:grid-cols-[1fr_380px]" : ""}`}>
+                <div className="overflow-hidden rounded-xl border border-line bg-panel">
+                  {visibles.length === 0 ? (
+                    <p className="px-4 py-10 text-center text-sm text-ink-muted">
+                      {clientes.length === 0
+                        ? "Todavía no hay clientes. Crea el primero con “Nuevo cliente”, desde la ficha de un proyecto, o carga la demo."
+                        : "Ningún cliente en esta etapa."}
+                    </p>
+                  ) : (
+                    <table className="w-full text-sm">
+                      <thead className="bg-fondo/70 text-left text-xs text-ink-muted">
+                        <tr>
+                          <th className="px-4 py-2 font-medium">Cliente</th>
+                          <th className="hidden px-3 py-2 font-medium md:table-cell">Interés</th>
+                          <th className="px-3 py-2 font-medium">Etapa</th>
+                          <th className="px-3 py-2 font-medium">Próximo contacto</th>
+                          <th className="hidden px-3 py-2 font-medium lg:table-cell">Notas</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </div>
+                      </thead>
+                      <tbody>
+                        {visibles.map((c) => {
+                          const f = etiquetaFecha(c.proximoContacto);
+                          const tip = nombreTipologia(proyectos, c.proyectoId, c.tipologiaId);
+                          return (
+                            <tr
+                              key={c.id}
+                              onClick={() => setEditando(c)}
+                              className={`cursor-pointer border-t border-line-soft hover:bg-fondo/60 ${
+                                editando?.id === c.id ? "bg-select-soft" : ""
+                              }`}
+                            >
+                              <td className="px-4 py-2.5">
+                                <div className="font-medium">{c.nombre}</div>
+                                <div className="text-xs text-ink-muted">
+                                  {[c.telefono, c.email].filter(Boolean).join(" · ")}
+                                </div>
+                              </td>
+                              <td className="hidden px-3 py-2.5 md:table-cell">
+                                <div>{nombreProyecto(proyectos, c.proyectoId)}</div>
+                                {tip && <div className="text-xs text-ink-muted">{tip}</div>}
+                              </td>
+                              <td className="px-3 py-2.5">
+                                <span
+                                  className={`rounded px-1.5 py-0.5 text-xs font-medium ${COLOR_ETAPA[c.etapa]}`}
+                                >
+                                  {ETIQUETA_ETAPA[c.etapa]}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2.5">
+                                <span
+                                  className={
+                                    f.tono === "atrasado"
+                                      ? "font-semibold text-warn"
+                                      : f.tono === "hoy"
+                                        ? "font-semibold text-accent"
+                                        : f.tono === "vacio"
+                                          ? "text-ink-faint"
+                                          : ""
+                                  }
+                                >
+                                  {f.texto}
+                                </span>
+                                {c.proximoContacto && (
+                                  <div className="text-xs text-ink-faint">{c.proximoContacto}</div>
+                                )}
+                              </td>
+                              <td className="hidden max-w-xs truncate px-3 py-2.5 text-ink-muted lg:table-cell">
+                                {c.notas}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
 
-            {editando && (
-              <FormularioCliente
-                key={editando.id}
-                inicial={editando}
-                existente={clientes.some((c) => c.id === editando.id)}
-                guardando={guardando}
-                onGuardar={guardar}
-                onEliminar={() => eliminar(editando.id)}
-                onCancelar={() => setEditando(null)}
-              />
-            )}
-          </div>
+                {editando && (
+                  <FormularioCliente
+                    key={editando.id}
+                    inicial={editando}
+                    proyectos={proyectos}
+                    existente={clientes.some((c) => c.id === editando.id)}
+                    guardando={guardando}
+                    onGuardar={guardar}
+                    onEliminar={() => eliminar(editando.id)}
+                    onCancelar={() => setEditando(null)}
+                  />
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -485,6 +534,7 @@ function Tile({ etiqueta, valor, alerta }: { etiqueta: string; valor: number; al
 
 function FormularioCliente({
   inicial,
+  proyectos,
   existente,
   guardando,
   onGuardar,
@@ -492,6 +542,7 @@ function FormularioCliente({
   onCancelar,
 }: {
   inicial: Cliente;
+  proyectos: Proyecto[];
   existente: boolean;
   guardando: boolean;
   onGuardar: (c: Cliente) => void;
@@ -500,8 +551,20 @@ function FormularioCliente({
 }) {
   const [c, setC] = useState<Cliente>(inicial);
   const set = (parte: Partial<Cliente>) => setC((prev) => ({ ...prev, ...parte }));
-  const proyecto = PROYECTOS.find((p) => p.id === c.proyectoId);
+  const proyecto = proyectos.find((p) => p.id === c.proyectoId);
   const tipologia = proyecto?.tipologias.find((t) => t.id === c.tipologiaId);
+  const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
+  useEffect(() => {
+    if (!existente) return;
+    let vivo = true;
+    fetch(`/api/cotizaciones?cliente=${encodeURIComponent(inicial.id)}`)
+      .then((r) => (r.ok ? r.json() : { cotizaciones: [] }))
+      .then((j: { cotizaciones: Cotizacion[] }) => vivo && setCotizaciones(j.cotizaciones ?? []))
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, [existente, inicial.id]);
 
   return (
     <form
@@ -553,7 +616,7 @@ function FormularioCliente({
           className={INPUT}
         >
           <option value="">Sin definir</option>
-          {PROYECTOS.map((p) => (
+          {proyectos.map((p) => (
             <option key={p.id} value={p.id}>
               {p.nombre} · {p.comuna}
             </option>
@@ -615,6 +678,54 @@ function FormularioCliente({
           placeholder="Qué busca, presupuesto, qué quedó pendiente…"
         />
       </Campo>
+
+      {existente && (
+        <div>
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-xs font-medium text-ink-muted">Cotizaciones</span>
+            {proyecto && (
+              <Link
+                href={`/?p=${proyecto.id}`}
+                target="_blank"
+                className="text-xs text-accent hover:underline"
+              >
+                Nueva desde la ficha
+              </Link>
+            )}
+          </div>
+          {cotizaciones.length === 0 ? (
+            <p className="text-xs text-ink-faint">
+              Sin cotizaciones guardadas. Simula un crédito desde la ficha del proyecto y guárdalo para este
+              cliente.
+            </p>
+          ) : (
+            <ul className="space-y-1 text-sm">
+              {cotizaciones.map((q) => (
+                <li
+                  key={q.codigo}
+                  className="flex items-center justify-between gap-2 rounded-md border border-line-soft px-2 py-1"
+                >
+                  <span className="min-w-0 truncate">
+                    {q.proyectoNombre}
+                    {q.tipologiaNombre ? ` · ${q.tipologiaNombre}` : ""}
+                    <span className="block text-xs text-ink-muted">
+                      {q.creadaEn.slice(0, 10)} · vence {q.validaHasta}
+                    </span>
+                  </span>
+                  <a
+                    href={`/c/${q.codigo}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="shrink-0 text-xs text-accent hover:underline"
+                  >
+                    Abrir
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-between pt-1">
         {existente ? (

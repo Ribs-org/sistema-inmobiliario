@@ -33,6 +33,8 @@ export type Proyecto = {
   descripcion: string;
   amenidades: string[];
   tipologias: Tipologia[];
+  /** Caminatas por calle a estaciones cercanas, clave "L3:Hospitales" → metros */
+  caminatas?: Record<string, { metros: number; rectaM?: number }>;
 };
 
 export const ETIQUETA_ESTADO_VENTA: Record<EstadoVenta, string> = {

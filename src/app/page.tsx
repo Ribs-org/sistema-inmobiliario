@@ -6,7 +6,16 @@ import { ESTACIONES, type EstacionConLinea } from "@/data/metro";
 import type { Tipologia } from "@/data/proyectos";
 import { dentroDeRadio, RADIO_CAMINABLE_M } from "@/lib/geo";
 import { fmtCLP } from "@/lib/format";
-import { aplicarFiltros, FILTROS_INICIALES, PROYECTOS_ENRIQUECIDOS, type Filtros } from "@/lib/proyectos";
+import {
+  aplicarFiltros,
+  comunasDe,
+  enriquecerTodos,
+  FILTROS_INICIALES,
+  PROYECTOS_ENRIQUECIDOS,
+  type Filtros,
+  type ProyectoEnriquecido,
+} from "@/lib/proyectos";
+import type { Proyecto } from "@/data/proyectos";
 import { UF_RESPALDO, type InfoUF } from "@/lib/uf";
 import { TASA_RESPALDO, type InfoTasa } from "@/lib/tasa";
 import Analitica from "@/components/Analitica";
@@ -47,12 +56,32 @@ export default function Home() {
     fuente: "respaldo",
   });
   const [preset, setPreset] = useState<PresetSimulador | null>(null);
+  const [proyectos, setProyectos] = useState<ProyectoEnriquecido[]>(PROYECTOS_ENRIQUECIDOS);
+  const [autorizado, setAutorizado] = useState(false);
   const [infoTasa, setInfoTasa] = useState<InfoTasa>({
     valorPct: TASA_RESPALDO,
     periodo: null,
     fuente: "respaldo",
     descripcion: "Valor referencial fijo",
   });
+
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/proyectos")
+      .then((r) => r.json())
+      .then((j: { proyectos: Proyecto[]; origen: string }) => {
+        if (vivo && Array.isArray(j.proyectos) && j.origen === "redis")
+          setProyectos(enriquecerTodos(j.proyectos));
+      })
+      .catch(() => {});
+    fetch("/api/acceso")
+      .then((r) => r.json())
+      .then((j: { autorizado: boolean }) => vivo && setAutorizado(!!j.autorizado))
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   useEffect(() => {
     let vivo = true;
@@ -82,7 +111,7 @@ export default function Home() {
       const p = q.get("p");
       const e = q.get("e");
       const tab = q.get("tab") as Pestana | null;
-      if (p && PROYECTOS_ENRIQUECIDOS.some((x) => x.id === p)) setSeleccionadoId(p);
+      if (p) setSeleccionadoId(p);
       if (e) {
         const [lineaId, nombre] = e.split(":");
         const est = ESTACIONES.find((s) => s.lineaId === lineaId && s.nombre === nombre);
@@ -103,10 +132,11 @@ export default function Home() {
     window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
   }, [seleccionadoId, estacion, pestana]);
 
-  const filtrados = useMemo(() => aplicarFiltros(PROYECTOS_ENRIQUECIDOS, filtros), [filtros]);
+  const filtrados = useMemo(() => aplicarFiltros(proyectos, filtros), [proyectos, filtros]);
+  const comunas = useMemo(() => comunasDe(proyectos), [proyectos]);
   const seleccionado = useMemo(
-    () => PROYECTOS_ENRIQUECIDOS.find((p) => p.id === seleccionadoId) ?? null,
-    [seleccionadoId],
+    () => proyectos.find((p) => p.id === seleccionadoId) ?? null,
+    [proyectos, seleccionadoId],
   );
   const cercanos = useMemo(
     () => (estacion ? dentroDeRadio(estacion, filtrados, RADIO_CAMINABLE_M) : []),
@@ -120,7 +150,7 @@ export default function Home() {
   const seleccionarProyecto = (id: string) => {
     setSeleccionadoId(id);
     setPestana("mapa");
-    const p = PROYECTOS_ENRIQUECIDOS.find((x) => x.id === id);
+    const p = proyectos.find((x) => x.id === id);
     if (p) enfocar(p.lat, p.lng, 15);
   };
 
@@ -135,6 +165,10 @@ export default function Home() {
     setPreset({
       id: `${seleccionado.id}-${t.id}-${Date.now()}`,
       etiqueta: `${seleccionado.nombre} · ${t.nombre}`,
+      proyectoId: seleccionado.id,
+      proyectoNombre: seleccionado.nombre,
+      tipologiaId: t.id,
+      tipologiaNombre: t.nombre,
       precioUF: t.precioUF,
       piePct: seleccionado.pieMinimoPct,
       bonoPiePct: seleccionado.bonoPiePct ?? 0,
@@ -203,7 +237,8 @@ export default function Home() {
           ) : (
             <PanelProyectos
               proyectos={filtrados}
-              total={PROYECTOS_ENRIQUECIDOS.length}
+              total={proyectos.length}
+              comunas={comunas}
               filtros={filtros}
               onFiltros={setFiltros}
               seleccionadoId={seleccionadoId}
@@ -263,6 +298,7 @@ export default function Home() {
                   valorUF={infoUF.valor}
                   infoUF={infoUF}
                   infoTasa={infoTasa}
+                  autorizado={autorizado}
                   onCambiarUF={cambiarUF}
                   preset={preset}
                   onQuitarPreset={() => setPreset(null)}

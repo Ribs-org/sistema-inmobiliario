@@ -136,3 +136,30 @@ h3,
 input[type="range"] {
   accent-color: var(--color-accent);
 }
+
+/* ---------- impresión (cotizaciones) ---------- */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  html,
+  body {
+    background: #fff;
+  }
+  @page {
+    margin: 14mm;
+  }
+}
+
+.pin__pill--punto {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--color-select);
+  transform: translate(-50%, -50%);
+  cursor: grab;
+}
+.pin__pill--punto::after {
+  display: none;
+}

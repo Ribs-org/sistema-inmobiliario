@@ -1,7 +1,6 @@
 "use client";
 
 import { etiquetaLinea } from "@/data/metro";
-import { COMUNAS } from "@/data/proyectos";
 import { fmtCLP, fmtUF } from "@/lib/format";
 import { MINUTOS_CERCA_METRO, type Filtros, type ProyectoEnriquecido } from "@/lib/proyectos";
 import { BadgeEstado, Chip, Interruptor, PuntoLinea } from "./ui";
@@ -15,6 +14,7 @@ type Props = {
   onSeleccionar: (id: string) => void;
   resaltados: Set<string>;
   valorUF: number;
+  comunas: string[];
 };
 
 const DORMS: { v: Filtros["dormitorios"]; label: string }[] = [
@@ -34,6 +34,7 @@ export default function PanelProyectos({
   onSeleccionar,
   resaltados,
   valorUF,
+  comunas,
 }: Props) {
   const set = (parte: Partial<Filtros>) => onFiltros({ ...filtros, ...parte });
   const millones = (uf: number) => `≈ $${Math.round((uf * valorUF) / 1e6)} M`;
@@ -57,7 +58,7 @@ export default function PanelProyectos({
               className="w-full rounded-md border border-line bg-panel px-2 py-1.5 text-sm"
             >
               <option value="todas">Todas</option>
-              {COMUNAS.map((c) => (
+              {comunas.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>

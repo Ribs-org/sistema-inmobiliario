@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { dentroDeRadio, distanciaM, metroCercano, minutosCaminando, minutosEstimados } from "./geo";
-import { PROYECTOS } from "@/data/proyectos";
+import { proyectosMuestra } from "@/data/proyectos-muestra";
 import { ajustarAlTrazado, ESTACIONES, etiquetaLinea, LINEAS } from "@/data/metro";
+
+const PROYECTOS = proyectosMuestra();
 
 describe("distanciaM", () => {
   it("Baquedano → Los Leones ≈ 3,1 km", () => {
@@ -49,7 +51,7 @@ describe("red de Metro importada", () => {
 describe("metroCercano", () => {
   it("Independencia 1250 queda junto a Hospitales (L3), con ruta real por calle", () => {
     const p = PROYECTOS.find((x) => x.id === "independencia-norte")!;
-    const { actual, futura } = metroCercano(p, p.id);
+    const { actual, futura } = metroCercano(p, p.caminatas);
     expect(actual?.estacion.nombre).toBe("Hospitales");
     expect(actual!.fuente).toBe("ruta");
     expect(actual!.caminataM).toBeGreaterThanOrEqual(actual!.distanciaM);
@@ -59,7 +61,7 @@ describe("metroCercano", () => {
 
   it("Vista Estoril no tiene metro hoy pero sí con L7", () => {
     const p = PROYECTOS.find((x) => x.id === "vista-estoril")!;
-    const { actual, futura } = metroCercano(p, p.id);
+    const { actual, futura } = metroCercano(p, p.caminatas);
     expect(actual!.minutos).toBeGreaterThan(15);
     expect(futura?.estacion.lineaId).toBe("L7");
     expect(futura!.minutos).toBeLessThanOrEqual(10);
