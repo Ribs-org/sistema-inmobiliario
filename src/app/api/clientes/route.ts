@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { COOKIE_SESION, sesionValida } from "@/lib/acceso";
-import { normalizarCliente } from "@/lib/clientes";
+import { normalizarCliente, reconciliarCliente } from "@/lib/clientes";
 import {
   almacenamientoDisponible,
   eliminarCliente,
@@ -34,9 +34,11 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   if (!autorizado(req)) return noAutorizado();
   if (!almacenamientoDisponible()) return sinAlmacenamiento();
-  const cliente = normalizarCliente(await req.json().catch(() => null));
-  if (!cliente)
+  const recibido = normalizarCliente(await req.json().catch(() => null));
+  if (!recibido)
     return NextResponse.json({ error: "El cliente necesita al menos un nombre" }, { status: 400 });
+  const previo = (await listarClientes()).find((c) => c.id === recibido.id);
+  const cliente = reconciliarCliente(recibido, previo);
   return NextResponse.json({ clientes: await guardarCliente(cliente), almacenamiento: "redis" });
 }
 

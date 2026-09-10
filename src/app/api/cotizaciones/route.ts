@@ -10,6 +10,8 @@ import {
   type Cotizacion,
 } from "@/lib/cotizaciones-store";
 import { listarProyectos } from "@/lib/proyectos-store";
+import { nuevaInteraccion } from "@/lib/clientes";
+import { guardarCliente, listarClientes } from "@/lib/clientes-store";
 import { almacenamientoDisponible } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
@@ -65,6 +67,20 @@ export async function POST(req: NextRequest) {
     validaHasta: hasta.toISOString().slice(0, 10),
   };
   await guardarCotizacion(c);
+  if (c.clienteId) {
+    const cliente = (await listarClientes()).find((x) => x.id === c.clienteId);
+    if (cliente) {
+      const detalle = `${c.proyectoNombre}${c.tipologiaNombre ? ` · ${c.tipologiaNombre}` : ""} · ${c.parametros.plazoAnios} años · código ${c.codigo}`;
+      await guardarCliente({
+        ...cliente,
+        interacciones: [
+          nuevaInteraccion({ tipo: "cotizacion", texto: detalle }),
+          ...(cliente.interacciones ?? []),
+        ],
+        actualizadoEn: new Date().toISOString(),
+      });
+    }
+  }
   return NextResponse.json({ cotizacion: c, url: `/c/${c.codigo}` });
 }
 

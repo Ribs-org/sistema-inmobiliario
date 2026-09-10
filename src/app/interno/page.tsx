@@ -5,17 +5,26 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { clientesDemo } from "@/data/clientes-demo";
 import type { Proyecto } from "@/data/proyectos";
 import { proyectosMuestra } from "@/data/proyectos-muestra";
+import Embudo from "@/components/interno/Embudo";
 import ProyectosInterno from "@/components/interno/ProyectosInterno";
 import type { Cotizacion } from "@/lib/cotizaciones-store";
 import {
   ETAPAS,
   ETAPAS_ACTIVAS,
   ETIQUETA_ETAPA,
+  ETIQUETA_INTERACCION,
+  TIPOS_MANUALES,
   hoyISO,
+  nuevaInteraccion,
+  ordenarInteracciones,
+  reconciliarCliente,
+  ultimaInteraccion,
+  type TipoInteraccion,
   nuevoCliente,
   ordenarPorSeguimiento,
   type Cliente,
   type Etapa,
+  type Interaccion,
 } from "@/lib/clientes";
 import { fmtUF } from "@/lib/format";
 import { Chip } from "@/components/ui";
@@ -78,7 +87,12 @@ function nombreTipologia(lista: Proyecto[], proyectoId: string | null, tipId: st
   return lista.find((p) => p.id === proyectoId)?.tipologias.find((t) => t.id === tipId)?.nombre ?? null;
 }
 
-type Seccion = "clientes" | "proyectos";
+type Seccion = "clientes" | "embudo" | "proyectos";
+const SECCIONES: { id: Seccion; nombre: string }[] = [
+  { id: "clientes", nombre: "Clientes" },
+  { id: "embudo", nombre: "Embudo" },
+  { id: "proyectos", nombre: "Proyectos" },
+];
 
 export default function Interno() {
   const [auth, setAuth] = useState<Auth>("cargando");
@@ -176,22 +190,27 @@ export default function Interno() {
     setEditando(null);
   };
 
-  const persistir = async (accion: () => Promise<Response>, local: () => Cliente[]) => {
+  const persistir = async (
+    accion: () => Promise<Response>,
+    local: () => Cliente[],
+    despues: (lista: Cliente[]) => void = () => setEditando(null),
+  ) => {
     setGuardando(true);
     setAviso(null);
     try {
+      let lista: Cliente[];
       if (almacenamiento === "redis") {
         const r = await accion();
         if (r.status === 401) return setAuth("bloqueado");
         const j = (await r.json()) as { clientes?: Cliente[]; error?: string };
         if (!r.ok || !j.clientes) throw new Error(j.error ?? "No se pudo guardar");
-        setClientes(j.clientes);
+        lista = j.clientes;
       } else {
-        const lista = local();
+        lista = local();
         escribirLocal(lista);
-        setClientes(lista);
       }
-      setEditando(null);
+      setClientes(lista);
+      despues(lista);
     } catch (err) {
       setAviso(err instanceof Error ? err.message : "No se pudo guardar");
     } finally {
@@ -199,7 +218,8 @@ export default function Interno() {
     }
   };
 
-  const guardar = (c: Cliente) =>
+  /** Guarda el cliente; con `mantenerAbierto` deja el formulario abierto con la versión guardada. */
+  const guardar = (c: Cliente, mantenerAbierto = false) =>
     persistir(
       () =>
         fetch("/api/clientes", {
@@ -208,10 +228,11 @@ export default function Interno() {
           body: JSON.stringify(c),
         }),
       () => {
-        const actualizado = { ...c, actualizadoEn: new Date().toISOString() };
-        const i = clientes.findIndex((x) => x.id === c.id);
-        return i >= 0 ? clientes.map((x) => (x.id === c.id ? actualizado : x)) : [...clientes, actualizado];
+        const previo = clientes.find((x) => x.id === c.id);
+        const actualizado = reconciliarCliente({ ...c, actualizadoEn: new Date().toISOString() }, previo);
+        return previo ? clientes.map((x) => (x.id === c.id ? actualizado : x)) : [...clientes, actualizado];
       },
+      (lista) => setEditando(mantenerAbierto ? (lista.find((x) => x.id === c.id) ?? null) : null),
     );
 
   const eliminar = (id: string) => {
@@ -335,17 +356,17 @@ export default function Interno() {
           <span className="hidden text-sm text-ink-muted sm:inline">Área interna</span>
         </div>
         <nav className="flex gap-1 rounded-md bg-fondo p-0.5" aria-label="Secciones">
-          {(["clientes", "proyectos"] as Seccion[]).map((s) => (
+          {SECCIONES.map((s) => (
             <button
-              key={s}
+              key={s.id}
               type="button"
-              onClick={() => setSeccion(s)}
-              aria-current={seccion === s ? "page" : undefined}
+              onClick={() => setSeccion(s.id)}
+              aria-current={seccion === s.id ? "page" : undefined}
               className={`rounded px-3 py-1 text-sm font-medium transition-colors ${
-                seccion === s ? "bg-panel text-ink shadow-sm" : "text-ink-muted hover:text-ink"
+                seccion === s.id ? "bg-panel text-ink shadow-sm" : "text-ink-muted hover:text-ink"
               }`}
             >
-              {s === "clientes" ? "Clientes" : "Proyectos"}
+              {s.nombre}
             </button>
           ))}
         </nav>
@@ -361,6 +382,15 @@ export default function Interno() {
 
       <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-4 py-5 lg:px-8">
+          {seccion === "embudo" && (
+            <Embudo
+              clientes={clientes}
+              onAbrir={(c) => {
+                setSeccion("clientes");
+                setEditando(c);
+              }}
+            />
+          )}
           {seccion === "proyectos" && (
             <ProyectosInterno
               proyectos={proyectos}
@@ -459,6 +489,13 @@ export default function Interno() {
                                 <div className="text-xs text-ink-muted">
                                   {[c.telefono, c.email].filter(Boolean).join(" · ")}
                                 </div>
+                                {ultimaInteraccion(c) && (
+                                  <div className="max-w-xs truncate text-xs text-ink-faint">
+                                    {ultimaInteraccion(c)!.fecha.slice(5)} ·{" "}
+                                    {ETIQUETA_INTERACCION[ultimaInteraccion(c)!.tipo]}:{" "}
+                                    {ultimaInteraccion(c)!.texto}
+                                  </div>
+                                )}
                               </td>
                               <td className="hidden px-3 py-2.5 md:table-cell">
                                 <div>{nombreProyecto(proyectos, c.proyectoId)}</div>
@@ -502,7 +539,7 @@ export default function Interno() {
 
                 {editando && (
                   <FormularioCliente
-                    key={editando.id}
+                    key={`${editando.id}-${editando.actualizadoEn}`}
                     inicial={editando}
                     proyectos={proyectos}
                     existente={clientes.some((c) => c.id === editando.id)}
@@ -545,7 +582,7 @@ function FormularioCliente({
   proyectos: Proyecto[];
   existente: boolean;
   guardando: boolean;
-  onGuardar: (c: Cliente) => void;
+  onGuardar: (c: Cliente, mantenerAbierto?: boolean) => void;
   onEliminar: () => void;
   onCancelar: () => void;
 }) {
@@ -679,6 +716,21 @@ function FormularioCliente({
         />
       </Campo>
 
+      <Historial
+        interacciones={c.interacciones ?? []}
+        guardando={guardando}
+        onAgregar={(tipo, fecha, texto) =>
+          onGuardar(
+            {
+              ...c,
+              nombre: c.nombre.trim(),
+              interacciones: [nuevaInteraccion({ tipo, fecha, texto }), ...(c.interacciones ?? [])],
+            },
+            true,
+          )
+        }
+      />
+
       {existente && (
         <div>
           <div className="mb-1 flex items-center justify-between">
@@ -755,5 +807,101 @@ function Campo({ etiqueta, children }: { etiqueta: string; children: React.React
       <span className="mb-1 block text-xs font-medium text-ink-muted">{etiqueta}</span>
       {children}
     </label>
+  );
+}
+
+function Historial({
+  interacciones,
+  guardando,
+  onAgregar,
+}: {
+  interacciones: Interaccion[];
+  guardando: boolean;
+  onAgregar: (tipo: TipoInteraccion, fecha: string, texto: string) => void;
+}) {
+  const [tipo, setTipo] = useState<TipoInteraccion>("llamada");
+  const [fecha, setFecha] = useState(hoyISO());
+  const [texto, setTexto] = useState("");
+  const [verTodas, setVerTodas] = useState(false);
+  const ordenadas = ordenarInteracciones(interacciones);
+  const visibles = verTodas ? ordenadas : ordenadas.slice(0, 5);
+
+  const agregar = () => {
+    if (!texto.trim()) return;
+    onAgregar(tipo, fecha, texto.trim());
+    setTexto("");
+  };
+
+  return (
+    <div className="rounded-lg border border-line-soft bg-fondo/50 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <span className="text-xs font-medium text-ink-muted">Historial</span>
+        <span className="text-xs text-ink-faint">
+          {interacciones.length} {interacciones.length === 1 ? "registro" : "registros"}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <select
+          value={tipo}
+          onChange={(e) => setTipo(e.target.value as TipoInteraccion)}
+          className={`${INPUT} w-auto`}
+        >
+          {TIPOS_MANUALES.map((t) => (
+            <option key={t} value={t}>
+              {ETIQUETA_INTERACCION[t]}
+            </option>
+          ))}
+        </select>
+        <input
+          type="date"
+          value={fecha}
+          onChange={(e) => setFecha(e.target.value)}
+          className={`${INPUT} w-auto`}
+        />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <input
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              agregar();
+            }
+          }}
+          placeholder="Qué pasó en este contacto…"
+          className={INPUT}
+        />
+        <button
+          type="button"
+          onClick={agregar}
+          disabled={guardando || !texto.trim()}
+          className="shrink-0 rounded-md bg-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-accent disabled:opacity-50"
+        >
+          Registrar
+        </button>
+      </div>
+      {ordenadas.length > 0 && (
+        <ol className="mt-3 space-y-1.5 border-l border-line pl-3">
+          {visibles.map((i) => (
+            <li key={i.id} className="text-sm">
+              <div className="text-xs text-ink-muted">
+                {i.fecha} · {ETIQUETA_INTERACCION[i.tipo]}
+              </div>
+              <div className={i.tipo === "etapa" ? "text-ink-muted" : ""}>{i.texto}</div>
+            </li>
+          ))}
+        </ol>
+      )}
+      {ordenadas.length > 5 && (
+        <button
+          type="button"
+          onClick={() => setVerTodas((v) => !v)}
+          className="mt-2 text-xs text-accent hover:underline"
+        >
+          {verTodas ? "Ver menos" : `Ver las ${ordenadas.length}`}
+        </button>
+      )}
+    </div>
   );
 }
