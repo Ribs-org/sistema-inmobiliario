@@ -49,3 +49,11 @@ Los datos se guardan en **Upstash Redis** (integración de Vercel Marketplace, v
 vercel integration add upstash/upstash-kv --name ribs-clientes   # requiere aceptar términos en el navegador
 vercel env pull                                                   # para desarrollo local
 ```
+
+## Proyectos editables
+
+En `/interno` → **Proyectos** se crean, editan y borran los proyectos reales (guardados en Redis bajo `pyxis:proyectos`). Mientras la lista esté vacía, el mapa muestra los 15 de muestra; "Importar muestra" los copia a Redis para editarlos. Al guardar, el servidor calcula las caminatas por calle a las estaciones cercanas (Valhalla), así que un guardado tarda unos segundos. La dirección se puede ubicar con Nominatim (OpenStreetMap) o arrastrando el pin.
+
+## Cotizaciones
+
+Con sesión interna abierta, el simulador muestra **Guardar cotización** cuando se llegó desde una tipología. Se elige un cliente existente o un prospecto, una vigencia y una nota; se genera un enlace público `/c/<código>` (no indexable) con la ficha del proyecto, el Metro cercano, la simulación congelada con la UF del día y la comparación por plazo, imprimible a PDF desde el navegador. Las cotizaciones se listan en la ficha de cada cliente y quedan en Redis bajo `pyxis:cotizaciones`. El pie de página se configura con `NEXT_PUBLIC_CONTACTO`.

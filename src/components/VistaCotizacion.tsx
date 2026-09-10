@@ -20,12 +20,13 @@ type Props = {
 const PLAZOS = [15, 20, 25, 30];
 
 function fechaLarga(iso: string) {
+  const formato: Intl.DateTimeFormatOptions = { day: "numeric", month: "long", year: "numeric" };
+  // Fechas con hora (ISO completo) se muestran en hora de Chile; las de solo día, tal cual.
+  if (iso.includes("T")) {
+    return new Date(iso).toLocaleDateString("es-CL", { ...formato, timeZone: "America/Santiago" });
+  }
   const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("es-CL", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return new Date(y, m - 1, d).toLocaleDateString("es-CL", formato);
 }
 
 export default function VistaCotizacion({ cotizacion: c, proyecto: p, contacto }: Props) {
