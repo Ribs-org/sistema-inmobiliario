@@ -27,14 +27,6 @@ npm test         # vitest: cálculo de crédito y geodistancias
 npm run build
 ```
 
-## Deploy en Vercel
-
-```bash
-npx vercel login
-npx vercel        # preview
-npx vercel --prod
-```
-
 Variables de entorno: `CLAVE_INTERNA` (clave del área interna), las de Upstash Redis que crea la integración, y opcionalmente `BCCH_USER`/`BCCH_PASS` o `TASA_REFERENCIA_UF` para la tasa. El mapa y el simulador funcionan sin ninguna.
 
 ## Área interna (clientes)
@@ -57,3 +49,13 @@ En `/interno` → **Proyectos** se crean, editan y borran los proyectos reales (
 ## Cotizaciones
 
 Con sesión interna abierta, el simulador muestra **Guardar cotización** cuando se llegó desde una tipología. Se elige un cliente existente o un prospecto, una vigencia y una nota; se genera un enlace público `/c/<código>` (no indexable) con la ficha del proyecto, el Metro cercano, la simulación congelada con la UF del día y la comparación por plazo, imprimible a PDF desde el navegador. Las cotizaciones se listan en la ficha de cada cliente y quedan en Redis bajo `pyxis:cotizaciones`. El pie de página se configura con `NEXT_PUBLIC_CONTACTO`.
+
+## Historial y embudo
+
+Cada cliente tiene un historial de interacciones: las manuales (llamada, WhatsApp, email, visita, reunión, nota) se registran desde la ficha con un solo campo, y el sistema agrega solas las de **cambio de etapa** (al guardar con otra etapa) y **cotización enviada** (al generar una cotización para ese cliente). El último contacto se ve en la lista.
+
+La pestaña **Embudo** muestra una columna por etapa con el conteo, la mediana de días en etapa y cada cliente con los días que lleva ahí (desde el último cambio de etapa). Un cliente en curso con 14 días o más sin avanzar se marca como estancado. Arriba: en curso, estancados, escrituras y tasa de cierre (escrituras sobre escrituras más perdidos).
+
+## Deploy
+
+El proyecto de Vercel está conectado al repo `Ribs-org/sistema-inmobiliario`: cada push a `main` despliega a producción y cada rama o PR genera un preview. GitHub Actions corre typecheck, lint y tests en cada push y PR (`.github/workflows/ci.yml`). El deploy manual con `vercel --prod` sigue funcionando pero ya no hace falta.
