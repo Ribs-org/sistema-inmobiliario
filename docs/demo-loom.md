@@ -17,7 +17,8 @@ Antes de grabar: abrir https://sistema-inmobiliario-phi.vercel.app en una pesta�
 
 ## 1:15 — Ficha del proyecto (30 s)
 - Clic en el pin **UF 2.690** (Mapocho 2900) o en la tarjeta de la estación.
-- Recorrer: estado en blanco, entrega 2028, bloque Metro actual vs futura, las 3 tipologías con precio en UF y pesos y UF/m².
+- Clic en la foto: se abre la galería (flechas o teclado). Cerrar con Esc.
+- Recorrer: estado en blanco, entrega 2028, bloque Metro actual vs futura, las 3 tipologías con precio en UF y pesos, UF/m² y "Ver plano".
 - "Tres tipologías, precio en UF y en pesos con la UF del día, que se trae sola de mindicador."
 
 ## 1:45 — Simulador (35 s)
@@ -38,3 +39,8 @@ Antes de grabar: abrir https://sistema-inmobiliario-phi.vercel.app en una pesta�
 - Vista Estoril (sin Metro hoy, L7 en 2028): `?p=vista-estoril`
 - Análisis: `?tab=analisis`
 - Simulador vacío: `?tab=simulador`
+
+## Estado de la demo (2026-09-10)
+- Los 15 proyectos ya están importados y editables en el área interna; 6 tienen fotos y planos: Irarrázaval 3300, Mapocho 2900, Macul Sur, Gran Avenida 4900, Vista Estoril y Alameda 4100.
+- Comparador: marca Irarrázaval 3300, Macul Sur y Gran Avenida 4900 en la lista y abre la pestaña Comparar; las fotos encabezan cada columna. Comparativa guardada de ejemplo: `/c/3payudrx`.
+- Área interna (clave: la que definiste en Vercel): pestañas Clientes (9 de demo con historial), Embudo y Proyectos (con Importar archivo y Excel de muestra).
