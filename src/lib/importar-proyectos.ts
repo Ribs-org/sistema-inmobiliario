@@ -69,8 +69,8 @@ export function parsearCSV(texto: string): string[][] {
 const num = (v: string | undefined) => {
   let s = (v ?? "").trim();
   if (!s) return undefined;
-  if (s.includes(",")) s = s.replace(/./g, "").replace(",", ".");
-  else if (/^-?d{1,3}(.d{3})+$/.test(s)) s = s.replace(/./g, "");
+  if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
   const n = Number(s);
   return Number.isFinite(n) ? n : undefined;
 };
