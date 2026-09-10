@@ -18,8 +18,19 @@ export type ParametrosCotizacion = {
   mesesEntrega: number;
 };
 
+/** Un proyecto dentro de una cotización comparativa. */
+export type ItemCotizacion = {
+  proyectoId: string;
+  tipologiaId: string | null;
+  proyectoNombre: string;
+  tipologiaNombre: string | null;
+  precioUF: number;
+};
+
 export type Cotizacion = {
   codigo: string;
+  /** Comparativa de 2 o 3 proyectos; si existe, proyectoId/tipologiaId apuntan al primero */
+  items?: ItemCotizacion[];
   proyectoId: string;
   tipologiaId: string | null;
   /** Copia del nombre del proyecto y la tipología por si cambian después */

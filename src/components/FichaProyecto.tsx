@@ -66,6 +66,25 @@ export default function FichaProyecto({
           <p className="text-xs text-ink-faint">{p.inmobiliaria}</p>
         </header>
 
+        {p.imagenes && p.imagenes.length > 0 && (
+          <div>
+            <a href={p.imagenes[0]} target="_blank" rel="noreferrer" title="Ver foto en tamaño completo">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.imagenes[0]} alt={p.nombre} className="h-44 w-full rounded-lg object-cover" />
+            </a>
+            {p.imagenes.length > 1 && (
+              <div className="mt-1.5 flex gap-1.5 overflow-x-auto">
+                {p.imagenes.slice(1).map((u) => (
+                  <a key={u} href={u} target="_blank" rel="noreferrer" className="shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={u} alt="" className="h-14 w-20 rounded-md object-cover" loading="lazy" />
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <p className="text-sm leading-relaxed text-ink">{p.descripcion}</p>
 
         <section className="rounded-lg border border-line bg-fondo/60 p-3">
@@ -117,6 +136,19 @@ export default function FichaProyecto({
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-xs text-ink-muted">
                     {fmtUF(Math.round(t.precioUF / t.m2Utiles))}/m² · {t.disponibles} disponibles
+                    {t.plano && (
+                      <>
+                        {" · "}
+                        <a
+                          href={t.plano}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-accent hover:underline"
+                        >
+                          Ver plano
+                        </a>
+                      </>
+                    )}
                   </span>
                   <button
                     type="button"

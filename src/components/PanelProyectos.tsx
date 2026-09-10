@@ -15,6 +15,10 @@ type Props = {
   resaltados: Set<string>;
   valorUF: number;
   comunas: string[];
+  /** Ids marcados para comparar (máximo 3) */
+  comparar: string[];
+  onComparar: (id: string) => void;
+  onIrComparar: () => void;
 };
 
 const DORMS: { v: Filtros["dormitorios"]; label: string }[] = [
@@ -35,6 +39,9 @@ export default function PanelProyectos({
   resaltados,
   valorUF,
   comunas,
+  comparar,
+  onComparar,
+  onIrComparar,
 }: Props) {
   const set = (parte: Partial<Filtros>) => onFiltros({ ...filtros, ...parte });
   const millones = (uf: number) => `≈ $${Math.round((uf * valorUF) / 1e6)} M`;
@@ -122,12 +129,21 @@ export default function PanelProyectos({
           const hl = resaltados.has(p.id);
           const dim = resaltados.size > 0 && !hl;
           return (
-            <li key={p.id} className={dim ? "opacity-45" : ""}>
+            <li key={p.id} className={`relative ${dim ? "opacity-45" : ""}`}>
+              <input
+                type="checkbox"
+                checked={comparar.includes(p.id)}
+                onChange={() => onComparar(p.id)}
+                disabled={!comparar.includes(p.id) && comparar.length >= 3}
+                title={comparar.includes(p.id) ? "Quitar de la comparación" : "Comparar este proyecto"}
+                aria-label={`Comparar ${p.nombre}`}
+                className="absolute top-4 left-3 z-10 accent-accent disabled:opacity-30"
+              />
               <button
                 type="button"
                 onClick={() => onSeleccionar(p.id)}
                 aria-current={sel ? "true" : undefined}
-                className={`block w-full border-b border-line-soft px-4 py-3 text-left transition-colors hover:bg-fondo ${
+                className={`block w-full border-b border-line-soft py-3 pr-4 pl-9 text-left transition-colors hover:bg-fondo ${
                   sel ? "bg-select-soft hover:bg-select-soft" : hl ? "bg-accent-soft/60" : ""
                 }`}
               >
@@ -180,9 +196,26 @@ export default function PanelProyectos({
           );
         })}
       </ul>
-      <div className="border-t border-line-soft px-4 py-2 text-[11px] text-ink-faint">
-        Precios en UF convertidos a {fmtCLP(valorUF)} por UF.
-      </div>
+      {comparar.length > 0 ? (
+        <div className="flex items-center justify-between border-t border-line bg-select-soft px-4 py-2 text-sm">
+          <span>
+            {comparar.length} {comparar.length === 1 ? "proyecto marcado" : "proyectos marcados"}
+            {comparar.length === 1 ? " · marca otro para comparar" : ""}
+          </span>
+          <button
+            type="button"
+            onClick={onIrComparar}
+            disabled={comparar.length < 2}
+            className="rounded-md bg-ink px-3 py-1 text-xs font-medium text-white hover:bg-accent disabled:opacity-40"
+          >
+            Comparar
+          </button>
+        </div>
+      ) : (
+        <div className="border-t border-line-soft px-4 py-2 text-[11px] text-ink-faint">
+          Precios en UF convertidos a {fmtCLP(valorUF)} por UF. Marca hasta 3 proyectos para compararlos.
+        </div>
+      )}
     </div>
   );
 }

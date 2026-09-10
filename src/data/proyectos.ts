@@ -12,6 +12,8 @@ export type Tipologia = {
   precioUF: number;
   orientacion: string;
   disponibles: number;
+  /** URL del plano (imagen o PDF) en Vercel Blob */
+  plano?: string;
 };
 
 export type Proyecto = {
@@ -35,6 +37,8 @@ export type Proyecto = {
   tipologias: Tipologia[];
   /** Caminatas por calle a estaciones cercanas, clave "L3:Hospitales" → metros */
   caminatas?: Record<string, { metros: number; rectaM?: number }>;
+  /** Fotos del proyecto (URLs en Vercel Blob); la primera es la principal */
+  imagenes?: string[];
 };
 
 export const ETIQUETA_ESTADO_VENTA: Record<EstadoVenta, string> = {

@@ -62,6 +62,19 @@ export function slug(texto: string): string {
 }
 
 const texto = (v: unknown, max = 300) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+
+/** Acepta solo URLs https de nuestro almacenamiento de imágenes (Vercel Blob). */
+export function urlImagen(v: unknown): string | undefined {
+  if (typeof v !== "string") return undefined;
+  try {
+    const u = new URL(v.trim());
+    return u.protocol === "https:" && u.hostname.endsWith(".public.blob.vercel-storage.com")
+      ? u.toString()
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
 const numero = (v: unknown, min: number, max: number, def = 0) => {
   const n = typeof v === "number" ? v : Number(String(v ?? "").replace(",", "."));
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : def;
@@ -84,6 +97,7 @@ function normalizarTipologia(entrada: unknown, i: number): Tipologia | null {
     precioUF,
     orientacion: texto(e.orientacion, 40),
     disponibles: numero(e.disponibles, 0, 5000),
+    plano: urlImagen(e.plano),
   };
 }
 
@@ -128,5 +142,11 @@ export function normalizarProyecto(entrada: unknown): Proyecto | null {
     tipologias,
     caminatas:
       e.caminatas && typeof e.caminatas === "object" ? (e.caminatas as Proyecto["caminatas"]) : undefined,
+    imagenes: Array.isArray(e.imagenes)
+      ? e.imagenes
+          .map(urlImagen)
+          .filter((u): u is string => !!u)
+          .slice(0, 12)
+      : undefined,
   };
 }

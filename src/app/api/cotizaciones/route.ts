@@ -8,6 +8,7 @@ import {
   listarCotizaciones,
   normalizarParametros,
   type Cotizacion,
+  type ItemCotizacion,
 } from "@/lib/cotizaciones-store";
 import { listarProyectos } from "@/lib/proyectos-store";
 import { nuevaInteraccion } from "@/lib/clientes";
@@ -49,15 +50,35 @@ export async function POST(req: NextRequest) {
   const tipologiaId = texto(b?.tipologiaId, 10) || null;
   const tipologia = proyecto.tipologias.find((t) => t.id === tipologiaId) ?? null;
 
+  // Comparativa: 2 o 3 proyectos con su tipología; se congelan nombre y precio de cada uno.
+  let items: ItemCotizacion[] | undefined;
+  if (Array.isArray(b?.items) && b.items.length >= 2) {
+    items = [];
+    for (const it of (b.items as Record<string, unknown>[]).slice(0, 3)) {
+      const p = proyectos.find((x) => x.id === texto(it?.proyectoId, 60));
+      if (!p)
+        return NextResponse.json({ error: "Proyecto de la comparativa no encontrado" }, { status: 404 });
+      const t = p.tipologias.find((x) => x.id === texto(it?.tipologiaId, 10)) ?? p.tipologias[0];
+      items.push({
+        proyectoId: p.id,
+        tipologiaId: t?.id ?? null,
+        proyectoNombre: p.nombre,
+        tipologiaNombre: t?.nombre ?? null,
+        precioUF: t?.precioUF ?? 0,
+      });
+    }
+  }
+
   const dias = Math.min(90, Math.max(1, Number(b?.diasVigencia) || DIAS_VIGENCIA));
   const ahora = new Date();
   const hasta = new Date(ahora.getTime() + dias * 86400000);
   const c: Cotizacion = {
     codigo: generarCodigo(),
+    items,
     proyectoId,
     tipologiaId: tipologia?.id ?? null,
-    proyectoNombre: proyecto.nombre,
-    tipologiaNombre: tipologia?.nombre ?? null,
+    proyectoNombre: items ? items.map((i) => i.proyectoNombre).join(" vs ") : proyecto.nombre,
+    tipologiaNombre: items ? null : (tipologia?.nombre ?? null),
     clienteId: texto(b?.clienteId, 40) || null,
     clienteNombre,
     clienteEmail: texto(b?.clienteEmail, 120),

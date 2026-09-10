@@ -426,6 +426,12 @@ function FormularioProyecto({
           className={INPUT}
         />
       </Campo>
+
+      <Fotos
+        imagenes={p.imagenes ?? []}
+        carpeta={`proyectos/${p.id || "nuevo"}/fotos`}
+        onCambio={(imagenes) => set({ imagenes })}
+      />
       <Campo etiqueta="Espacios comunes (separados por coma)">
         <input
           value={amenidadesTexto}
@@ -482,6 +488,11 @@ function FormularioProyecto({
                   ✕
                 </button>
               </div>
+              <Plano
+                url={t.plano}
+                carpeta={`proyectos/${p.id || "nuevo"}/planos`}
+                onCambio={(plano) => setTip(i, { plano })}
+              />
               <input
                 value={t.orientacion}
                 onChange={(e) => setTip(i, { orientacion: e.target.value })}
@@ -545,5 +556,186 @@ function Campo({
       <span className="mb-1 block text-xs font-medium text-ink-muted">{etiqueta}</span>
       {children}
     </label>
+  );
+}
+
+/** Sube un archivo a Vercel Blob a través de la API interna y devuelve su URL. */
+async function subirArchivo(archivo: File, carpeta: string): Promise<string> {
+  const datos = new FormData();
+  datos.set("archivo", archivo);
+  datos.set("carpeta", carpeta);
+  const r = await fetch("/api/imagenes", { method: "POST", body: datos });
+  const j = (await r.json()) as { url?: string; error?: string };
+  if (!r.ok || !j.url) throw new Error(j.error ?? "No se pudo subir");
+  return j.url;
+}
+
+function borrarArchivo(url: string) {
+  return fetch(`/api/imagenes?url=${encodeURIComponent(url)}`, { method: "DELETE" }).catch(() => {});
+}
+
+function Fotos({
+  imagenes,
+  carpeta,
+  onCambio,
+}: {
+  imagenes: string[];
+  carpeta: string;
+  onCambio: (imagenes: string[]) => void;
+}) {
+  const [subiendo, setSubiendo] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const subir = async (archivos: FileList | null) => {
+    if (!archivos?.length) return;
+    setSubiendo(true);
+    setError(null);
+    const nuevas: string[] = [];
+    for (const a of Array.from(archivos).slice(0, 12 - imagenes.length)) {
+      try {
+        nuevas.push(await subirArchivo(a, carpeta));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "No se pudo subir");
+      }
+    }
+    onCambio([...imagenes, ...nuevas]);
+    setSubiendo(false);
+  };
+
+  const quitar = (url: string) => {
+    onCambio(imagenes.filter((u) => u !== url));
+    borrarArchivo(url);
+  };
+
+  const mover = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= imagenes.length) return;
+    const copia = [...imagenes];
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+    onCambio(copia);
+  };
+
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-xs font-medium text-ink-muted">Fotos (la primera es la principal)</span>
+        <label className="cursor-pointer text-xs text-accent hover:underline">
+          {subiendo ? "Subiendo…" : "+ Subir fotos"}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/avif"
+            multiple
+            disabled={subiendo || imagenes.length >= 12}
+            onChange={(e) => {
+              subir(e.target.files);
+              e.target.value = "";
+            }}
+            className="hidden"
+          />
+        </label>
+      </div>
+      {error && <p className="mb-1 text-xs text-warn">{error}</p>}
+      {imagenes.length === 0 ? (
+        <p className="rounded-md border border-dashed border-line px-3 py-3 text-center text-xs text-ink-faint">
+          Sin fotos. JPG, PNG o WebP de hasta 8 MB.
+        </p>
+      ) : (
+        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {imagenes.map((u, i) => (
+            <li key={u} className="group relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={u} alt="" className="h-20 w-full rounded-md object-cover" loading="lazy" />
+              {i === 0 && (
+                <span className="absolute top-1 left-1 rounded bg-ink/80 px-1 text-[10px] text-white">
+                  Principal
+                </span>
+              )}
+              <div className="absolute right-1 bottom-1 flex gap-0.5 rounded bg-panel/90 text-xs opacity-0 group-hover:opacity-100">
+                <button
+                  type="button"
+                  onClick={() => mover(i, -1)}
+                  title="Mover antes"
+                  className="px-1 hover:text-accent"
+                >
+                  ←
+                </button>
+                <button
+                  type="button"
+                  onClick={() => mover(i, 1)}
+                  title="Mover después"
+                  className="px-1 hover:text-accent"
+                >
+                  →
+                </button>
+                <button
+                  type="button"
+                  onClick={() => quitar(u)}
+                  title="Quitar"
+                  className="px-1 hover:text-warn"
+                >
+                  ✕
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function Plano({
+  url,
+  carpeta,
+  onCambio,
+}: {
+  url?: string;
+  carpeta: string;
+  onCambio: (url: string | undefined) => void;
+}) {
+  const [subiendo, setSubiendo] = useState(false);
+  return (
+    <div className="col-span-4 flex items-center gap-2 text-xs sm:col-span-8">
+      {url ? (
+        <>
+          <a href={url} target="_blank" rel="noreferrer" className="text-accent hover:underline">
+            Ver plano
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              onCambio(undefined);
+              borrarArchivo(url);
+            }}
+            className="text-ink-muted hover:text-warn"
+          >
+            Quitar plano
+          </button>
+        </>
+      ) : (
+        <label className="cursor-pointer text-accent hover:underline">
+          {subiendo ? "Subiendo plano…" : "+ Plano (imagen o PDF)"}
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/avif,application/pdf"
+            disabled={subiendo}
+            onChange={async (e) => {
+              const a = e.target.files?.[0];
+              e.target.value = "";
+              if (!a) return;
+              setSubiendo(true);
+              try {
+                onCambio(await subirArchivo(a, carpeta));
+              } catch (err) {
+                window.alert(err instanceof Error ? err.message : "No se pudo subir el plano");
+              } finally {
+                setSubiendo(false);
+              }
+            }}
+            className="hidden"
+          />
+        </label>
+      )}
+    </div>
   );
 }

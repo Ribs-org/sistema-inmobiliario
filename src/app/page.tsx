@@ -19,6 +19,7 @@ import type { Proyecto } from "@/data/proyectos";
 import { UF_RESPALDO, type InfoUF } from "@/lib/uf";
 import { TASA_RESPALDO, type InfoTasa } from "@/lib/tasa";
 import Analitica from "@/components/Analitica";
+import Comparador from "@/components/Comparador";
 import FichaProyecto from "@/components/FichaProyecto";
 import LeyendaMetro from "@/components/LeyendaMetro";
 import Mapa from "@/components/MapaCliente";
@@ -27,11 +28,12 @@ import PanelProyectos from "@/components/PanelProyectos";
 import Simulador, { type PresetSimulador } from "@/components/Simulador";
 import TarjetaEstacion from "@/components/TarjetaEstacion";
 
-type Pestana = "mapa" | "analisis" | "simulador";
+type Pestana = "mapa" | "analisis" | "comparar" | "simulador";
 
 const PESTANAS: { id: Pestana; nombre: string }[] = [
   { id: "mapa", nombre: "Mapa" },
   { id: "analisis", nombre: "Precio vs Metro" },
+  { id: "comparar", nombre: "Comparar" },
   { id: "simulador", nombre: "Simulador" },
 ];
 
@@ -58,6 +60,11 @@ export default function Home() {
   const [preset, setPreset] = useState<PresetSimulador | null>(null);
   const [proyectos, setProyectos] = useState<ProyectoEnriquecido[]>(PROYECTOS_ENRIQUECIDOS);
   const [autorizado, setAutorizado] = useState(false);
+  const [comparar, setComparar] = useState<string[]>([]);
+  const alternarComparar = (id: string) =>
+    setComparar((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : prev.length >= 3 ? prev : [...prev, id],
+    );
   const [infoTasa, setInfoTasa] = useState<InfoTasa>({
     valorPct: TASA_RESPALDO,
     periodo: null,
@@ -200,7 +207,7 @@ export default function Home() {
                 pestana === t.id ? "bg-panel text-ink shadow-sm" : "text-ink-muted hover:text-ink"
               }`}
             >
-              {t.nombre}
+              {t.id === "comparar" && comparar.length > 0 ? `Comparar (${comparar.length})` : t.nombre}
             </button>
           ))}
         </nav>
@@ -239,6 +246,9 @@ export default function Home() {
               proyectos={filtrados}
               total={proyectos.length}
               comunas={comunas}
+              comparar={comparar}
+              onComparar={alternarComparar}
+              onIrComparar={() => setPestana("comparar")}
               filtros={filtros}
               onFiltros={setFiltros}
               seleccionadoId={seleccionadoId}
@@ -291,6 +301,17 @@ export default function Home() {
                   proyectos={filtrados}
                   seleccionadoId={seleccionadoId}
                   onSeleccionar={seleccionarProyecto}
+                />
+              ) : pestana === "comparar" ? (
+                <Comparador
+                  proyectos={comparar
+                    .map((id) => proyectos.find((p) => p.id === id))
+                    .filter((p): p is ProyectoEnriquecido => !!p)}
+                  valorUF={infoUF.valor}
+                  infoTasa={infoTasa}
+                  autorizado={autorizado}
+                  onQuitar={alternarComparar}
+                  onVerFicha={seleccionarProyecto}
                 />
               ) : (
                 <Simulador

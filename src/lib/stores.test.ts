@@ -69,3 +69,15 @@ describe("cotizaciones", () => {
     expect(generarCodigo()).not.toBe(c);
   });
 });
+
+describe("urlImagen", () => {
+  it("solo acepta URLs https del almacenamiento de imágenes", async () => {
+    const { urlImagen } = await import("./proyectos-store");
+    expect(urlImagen("https://abc123.public.blob.vercel-storage.com/proyectos/x/foto-1.jpg")).toContain(
+      "foto-1.jpg",
+    );
+    expect(urlImagen("http://abc123.public.blob.vercel-storage.com/x.jpg")).toBeUndefined();
+    expect(urlImagen("https://evil.com/x.jpg")).toBeUndefined();
+    expect(urlImagen(42)).toBeUndefined();
+  });
+});

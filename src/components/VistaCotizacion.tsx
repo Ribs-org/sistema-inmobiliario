@@ -10,10 +10,13 @@ import type { Cotizacion } from "@/lib/cotizaciones-store";
 import { CARGA_MAXIMA_RENTA, cuotaPie, simularCredito } from "@/lib/credito";
 import { fmtCLP, fmtDist, fmtM2, fmtUF } from "@/lib/format";
 import type { ProyectoEnriquecido } from "@/lib/proyectos";
+import VistaComparativa from "./VistaComparativa";
 
 type Props = {
   cotizacion: Cotizacion;
   proyecto: ProyectoEnriquecido | null;
+  /** Comparativas: un proyecto por columna (null si ya no existe) */
+  proyectosItems?: (ProyectoEnriquecido | null)[];
   contacto: string;
 };
 
@@ -29,7 +32,21 @@ function fechaLarga(iso: string) {
   return new Date(y, m - 1, d).toLocaleDateString("es-CL", formato);
 }
 
-export default function VistaCotizacion({ cotizacion: c, proyecto: p, contacto }: Props) {
+export default function VistaCotizacion({ cotizacion: c, proyecto: p, proyectosItems, contacto }: Props) {
+  if (c.items && c.items.length >= 2) {
+    return (
+      <VistaComparativa
+        cotizacion={c}
+        proyectos={proyectosItems ?? []}
+        contacto={contacto}
+        fechaLarga={fechaLarga}
+      />
+    );
+  }
+  return <VistaIndividual cotizacion={c} proyecto={p} contacto={contacto} />;
+}
+
+function VistaIndividual({ cotizacion: c, proyecto: p, contacto }: Omit<Props, "proyectosItems">) {
   const pr = c.parametros;
   const r = useMemo(() => simularCredito(pr), [pr]);
   const comparacion = useMemo(
@@ -82,6 +99,11 @@ export default function VistaCotizacion({ cotizacion: c, proyecto: p, contacto }
             </p>
           )}
 
+          {p?.imagenes?.[0] && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={p.imagenes[0]} alt={p.nombre} className="mt-6 h-56 w-full rounded-lg object-cover" />
+          )}
+
           <section className="mt-6 grid gap-6 sm:grid-cols-2">
             <div>
               <h2 className="text-base font-semibold">{c.proyectoNombre}</h2>
@@ -112,6 +134,20 @@ export default function VistaCotizacion({ cotizacion: c, proyecto: p, contacto }
                 <span className="text-sm font-normal text-ink-muted">{clp(pr.precioUF)}</span>
               </p>
               <p className="text-xs text-ink-faint">UF a {fmtCLP(pr.valorUF)} del día de emisión</p>
+              {tipologia?.plano && (
+                <a href={tipologia.plano} target="_blank" rel="noreferrer" className="mt-2 block">
+                  {/\.pdf($|\?)/i.test(tipologia.plano) ? (
+                    <span className="text-xs text-accent hover:underline">Ver plano (PDF)</span>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={tipologia.plano}
+                      alt={`Plano ${tipologia.nombre}`}
+                      className="max-h-48 rounded-md border border-line-soft object-contain"
+                    />
+                  )}
+                </a>
+              )}
             </div>
           </section>
 

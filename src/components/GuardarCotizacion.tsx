@@ -12,6 +12,8 @@ type Props = {
   tipologiaId: string | null;
   tipologiaNombre: string | null;
   parametros: ParametrosCotizacion;
+  /** Comparativa: 2 o 3 proyectos con su tipología elegida */
+  items?: { proyectoId: string; tipologiaId: string | null }[];
   onCerrar: () => void;
 };
 
@@ -23,6 +25,7 @@ export default function GuardarCotizacion({
   tipologiaId,
   tipologiaNombre,
   parametros,
+  items,
   onCerrar,
 }: Props) {
   const [clientes, setClientes] = useState<Cliente[]>([]);
@@ -63,6 +66,7 @@ export default function GuardarCotizacion({
         body: JSON.stringify({
           proyectoId,
           tipologiaId,
+          items,
           clienteId: clienteId || null,
           clienteNombre: nombre,
           clienteEmail: email,
@@ -104,7 +108,7 @@ export default function GuardarCotizacion({
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold">Guardar cotización</h2>
+            <h2 className="text-lg font-semibold">{items ? "Guardar comparativa" : "Guardar cotización"}</h2>
             <p className="text-sm text-ink-muted">
               {proyectoNombre}
               {tipologiaNombre ? ` · ${tipologiaNombre}` : ""}

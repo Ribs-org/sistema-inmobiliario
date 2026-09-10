@@ -25,10 +25,16 @@ export default async function PaginaCotizacion({ params }: Props) {
   const { proyectos } = await listarProyectos();
   const proyecto = proyectos.find((p) => p.id === cotizacion.proyectoId);
   const contacto = process.env.NEXT_PUBLIC_CONTACTO ?? "Pyxis · equipo comercial";
+  // Para comparativas, los proyectos de cada columna (null si ya no están en el catálogo).
+  const proyectosItems = (cotizacion.items ?? []).map((it) => {
+    const p = proyectos.find((x) => x.id === it.proyectoId);
+    return p ? enriquecer(p) : null;
+  });
   return (
     <VistaCotizacion
       cotizacion={cotizacion}
       proyecto={proyecto ? enriquecer(proyecto) : null}
+      proyectosItems={proyectosItems}
       contacto={contacto}
     />
   );
