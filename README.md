@@ -59,3 +59,11 @@ La pestaña **Embudo** muestra una columna por etapa con el conteo, la mediana d
 ## Deploy
 
 El proyecto de Vercel está conectado al repo `Ribs-org/sistema-inmobiliario`: cada push a `main` despliega a producción y cada rama o PR genera un preview. GitHub Actions corre typecheck, lint y tests en cada push y PR (`.github/workflows/ci.yml`). El deploy manual con `vercel --prod` sigue funcionando pero ya no hace falta.
+
+## Comparador
+
+En la lista del mapa cada proyecto tiene una casilla para compararlo (hasta 3). La pestaña **Comparar** los muestra lado a lado con las mismas condiciones de crédito (pie, plazo, tasa, seguros) y una tipología elegible por columna; el mejor valor de cada fila (precio, UF/m², minutos al Metro, dividendo) se resalta. Con sesión interna, "Guardar comparativa" crea una cotización con enlace público `/c/<código>` que muestra la misma tabla congelada.
+
+## Fotos y planos
+
+Las imágenes viven en **Vercel Blob** (store `pyxis-imagenes`, público; variable `BLOB_READ_WRITE_TOKEN`). En el área interna, cada proyecto acepta hasta 12 fotos (JPG, PNG, WebP o AVIF de hasta 8 MB; la primera es la principal y se pueden reordenar) y cada tipología un plano (imagen o PDF). Se muestran en la ficha, en el comparador y en la cotización. La API `/api/imagenes` solo acepta subidas con sesión y solo guarda URLs de ese store.
