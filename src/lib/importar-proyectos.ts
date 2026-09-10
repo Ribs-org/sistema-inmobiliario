@@ -99,7 +99,28 @@ export type ProyectoImportado = Record<string, unknown> & {
  * agrupan y sus campos de proyecto se toman de la primera fila que los tenga.
  */
 export function proyectosDesdeCSV(texto: string): { proyectos: ProyectoImportado[]; errores: string[] } {
-  const filas = parsearCSV(texto);
+  return proyectosDesdeFilas(parsearCSV(texto));
+}
+
+/** Lee la primera hoja de un .xlsx (o .xls) y la trata como la plantilla CSV. */
+export async function proyectosDesdeXLSX(
+  datos: ArrayBuffer,
+): Promise<{ proyectos: ProyectoImportado[]; errores: string[] }> {
+  const XLSX = await import("xlsx");
+  const libro = XLSX.read(datos, { type: "array" });
+  const hoja = libro.Sheets[libro.SheetNames.find((n) => /proyecto/i.test(n)) ?? libro.SheetNames[0]];
+  if (!hoja) return { proyectos: [], errores: ["El archivo no tiene hojas"] };
+  const filas = XLSX.utils.sheet_to_json<unknown[]>(hoja, { header: 1, raw: true, defval: "" });
+  return proyectosDesdeFilas(
+    filas.map((f) => f.map((c) => (typeof c === "number" ? String(c) : String(c ?? "")))),
+  );
+}
+
+/** Filas ya separadas (la primera es la cabecera). Los números pueden venir como "3.250", "38,5" o "38.5". */
+export function proyectosDesdeFilas(filas: string[][]): {
+  proyectos: ProyectoImportado[];
+  errores: string[];
+} {
   const errores: string[] = [];
   if (filas.length < 2) return { proyectos: [], errores: ["El archivo no tiene filas de datos"] };
   const cab = filas[0].map((c) => c.trim().toLowerCase());

@@ -61,3 +61,28 @@ describe("proyectosDesdeJSON", () => {
     expect(proyectosDesdeJSON("{no").errores).toHaveLength(1);
   });
 });
+
+describe("proyectosDesdeFilas / XLSX", () => {
+  it("acepta números como texto sin formato (celdas numéricas de Excel)", async () => {
+    const { proyectosDesdeFilas } = await import("./importar-proyectos");
+    const { proyectos } = proyectosDesdeFilas([
+      ["proyecto_id", "proyecto", "lat", "lng", "tipologia", "m2_utiles", "precio_uf"],
+      ["a", "A", "-33.4561", "-70.6098", "1D1B", "38.5", "3400"],
+    ]);
+    expect(proyectos[0].lat).toBe(-33.4561);
+    expect(proyectos[0].tipologias[0].m2Utiles).toBe(38.5);
+    expect(proyectos[0].tipologias[0].precioUF).toBe(3400);
+  });
+
+  it("lee el Excel de muestra publicado", async () => {
+    const { readFileSync } = await import("node:fs");
+    const { proyectosDesdeXLSX } = await import("./importar-proyectos");
+    const buf = readFileSync("public/proyectos-muestra.xlsx");
+    const { proyectos, errores } = await proyectosDesdeXLSX(
+      buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength),
+    );
+    expect(errores).toEqual([]);
+    expect(proyectos).toHaveLength(15);
+    expect(proyectos.every((p) => p.tipologias.length === 3)).toBe(true);
+  });
+});

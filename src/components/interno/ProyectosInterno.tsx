@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type ComponentType, type FormEvent } from "react";
 import { ETIQUETA_ESTADO_VENTA, type EstadoVenta, type Proyecto, type Tipologia } from "@/data/proyectos";
 import { fmtUF } from "@/lib/format";
-import { proyectosDesdeCSV, proyectosDesdeJSON } from "@/lib/importar-proyectos";
+import { proyectosDesdeCSV, proyectosDesdeJSON, proyectosDesdeXLSX } from "@/lib/importar-proyectos";
 import { BadgeEstado } from "@/components/ui";
 
 type Props = {
@@ -112,10 +112,12 @@ export default function ProyectosInterno({ proyectos, origen, onCambio, onBloque
     setAviso(null);
     setResultadoImport(null);
     try {
-      const texto = await archivo.text();
-      const { proyectos: lista, errores } = archivo.name.toLowerCase().endsWith(".json")
-        ? proyectosDesdeJSON(texto)
-        : proyectosDesdeCSV(texto);
+      const nombre = archivo.name.toLowerCase();
+      const { proyectos: lista, errores } = /\.xlsx?$/.test(nombre)
+        ? await proyectosDesdeXLSX(await archivo.arrayBuffer())
+        : nombre.endsWith(".json")
+          ? proyectosDesdeJSON(await archivo.text())
+          : proyectosDesdeCSV(await archivo.text());
       if (lista.length === 0) {
         setResultadoImport({
           importados: 0,
@@ -217,6 +219,9 @@ export default function ProyectosInterno({ proyectos, origen, onCambio, onBloque
           {origen === "redis" ? " guardados" : " de muestra"}
         </p>
         <div className="flex flex-wrap items-center gap-2 text-xs">
+          <a href="/proyectos-muestra.xlsx" download className="text-accent hover:underline">
+            Excel de muestra
+          </a>
           <a href="/plantilla-proyectos.csv" download className="text-accent hover:underline">
             Plantilla CSV
           </a>
@@ -230,7 +235,7 @@ export default function ProyectosInterno({ proyectos, origen, onCambio, onBloque
             {ocupado === "archivo" ? "Importando…" : "Importar archivo"}
             <input
               type="file"
-              accept=".csv,.json,text/csv,application/json"
+              accept=".xlsx,.xls,.csv,.json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,application/json"
               disabled={ocupado !== null}
               onChange={(e) => {
                 const a = e.target.files?.[0];
