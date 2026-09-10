@@ -54,7 +54,7 @@ export async function eliminarProyecto(id: string): Promise<Proyecto[]> {
 export function slug(texto: string): string {
   return texto
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/\p{M}/gu, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
