@@ -987,6 +987,7 @@ function FormularioCliente({
       {existente && (
         <Documentos
           cliente={c}
+          existente={existente}
           guardando={guardando}
           onEstado={(docId, parte) =>
             onGuardar({ ...c, documentos: conDocumento(c.documentos, docId, parte) }, true)

@@ -113,7 +113,8 @@ export async function POST(req: NextRequest) {
     : (previo?.vendedorNombre ?? s.nombre);
 
   const cliente = await ajustarStock(
-    reconciliarCliente({ ...recibido, vendedorId, vendedorNombre }, previo),
+    // El token del portal lo crea solo /api/portal/enlace: no se acepta ni se pierde aquí.
+    reconciliarCliente({ ...recibido, vendedorId, vendedorNombre, tokenPortal: previo?.tokenPortal }, previo),
     previo,
   );
   return NextResponse.json({

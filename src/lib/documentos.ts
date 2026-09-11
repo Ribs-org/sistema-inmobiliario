@@ -110,6 +110,10 @@ export const DOCUMENTOS: DocumentoDef[] = [
   },
 ];
 
+/** Formatos y tamaño que acepta la subida. Aquí para que también los use el navegador. */
+export const FORMATOS_ACEPTADOS = "application/pdf,image/*";
+export const MAX_MB = 15;
+
 export const ETIQUETA_RESPONSABLE: Record<DocumentoDef["responsable"], string> = {
   cliente: "Lo trae el cliente",
   broker: "Lo prepara el broker",

@@ -160,6 +160,11 @@ export type Cliente = {
   tipoRenta?: TipoRenta;
   /** Carpeta de documentos del cliente (ver src/lib/documentos.ts) */
   documentos?: EstadoDocumento[];
+  /**
+   * Llave del enlace privado /mi/<token> donde el cliente sube sus papeles. La crea solo el
+   * servidor (ver src/lib/portal.ts); nunca se acepta desde una petición.
+   */
+  tokenPortal?: string;
   /** Fecha ISO (YYYY-MM-DD) del próximo contacto, o null */
   proximoContacto: string | null;
   notas: string;

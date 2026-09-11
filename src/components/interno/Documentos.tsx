@@ -18,12 +18,15 @@ import {
   documentosDe,
   estadoDe,
   ETIQUETA_RESPONSABLE,
+  FORMATOS_ACEPTADOS,
   progresoDocumentos,
   type DocumentoDef,
 } from "@/lib/documentos";
 
 type Props = {
   cliente: Cliente;
+  /** true si el cliente ya está guardado: sin eso no hay enlace de portal que generar */
+  existente: boolean;
   guardando: boolean;
   /** Cambia el estado o la nota de un documento y guarda el cliente */
   onEstado: (docId: string, parte: Partial<Omit<EstadoDocumento, "id">>) => void;
@@ -49,6 +52,7 @@ const GRUPOS = ["reserva", "promesa", "escritura"] as const;
 
 export default function Documentos({
   cliente,
+  existente,
   guardando,
   onEstado,
   onSubir,
@@ -56,7 +60,38 @@ export default function Documentos({
   onCambioRenta,
 }: Props) {
   const [verTodos, setVerTodos] = useState(false);
+  const [enlace, setEnlace] = useState<{ url: string; copiado: boolean } | null>(null);
+  const [pidiendo, setPidiendo] = useState(false);
   const entradas = useRef<Record<string, HTMLInputElement | null>>({});
+
+  /** Pide el enlace del portal (lo crea si no existía) y lo deja en el portapapeles. */
+  async function pedirEnlace(rotar = false) {
+    setPidiendo(true);
+    try {
+      const r = await fetch("/api/portal/enlace", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ cliente: cliente.id, rotar }),
+      });
+      const j = (await r.json()) as { url?: string; error?: string };
+      if (!r.ok || !j.url) {
+        setEnlace({ url: j.error ?? "No se pudo generar el enlace.", copiado: false });
+        return;
+      }
+      let copiado = false;
+      try {
+        await navigator.clipboard.writeText(j.url);
+        copiado = true;
+      } catch {
+        /* sin permiso de portapapeles: queda el enlace a la vista para copiarlo a mano */
+      }
+      setEnlace({ url: j.url, copiado });
+    } catch {
+      setEnlace({ url: "No se pudo conectar con el servidor.", copiado: false });
+    } finally {
+      setPidiendo(false);
+    }
+  }
 
   const aplican = useMemo(() => documentosDe(cliente, !verTodos), [cliente, verTodos]);
   const progreso = progresoDocumentos(cliente);
@@ -176,7 +211,7 @@ export default function Documentos({
                             entradas.current[d.id] = el;
                           }}
                           type="file"
-                          accept="application/pdf,image/*"
+                          accept={FORMATOS_ACEPTADOS}
                           className="hidden"
                           onChange={(e) => {
                             const f = e.target.files?.[0];
@@ -201,7 +236,47 @@ export default function Documentos({
       >
         {verTodos ? "Ver solo los que ya corresponden" : "Ver todos los documentos del proceso"}
       </button>
-      <p className="mt-1 text-[11px] text-ink-faint">
+
+      {existente && (
+        <div className="mt-3 rounded-md border border-line-soft px-2 py-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs text-ink-muted">Que los suba el cliente</span>
+            <button
+              type="button"
+              onClick={() => pedirEnlace()}
+              disabled={pidiendo || guardando}
+              className="rounded-md border border-line px-2 py-1 text-xs text-ink-muted hover:border-ink hover:text-ink disabled:opacity-50"
+            >
+              {pidiendo ? "Generando…" : "Copiar enlace para el cliente"}
+            </button>
+          </div>
+          {enlace && (
+            <p className="mt-1.5 break-all text-[11px] text-ink-faint">
+              {enlace.copiado ? "Copiado. " : ""}
+              {enlace.url}
+              {enlace.url.includes("/mi/") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm("El enlace anterior dejará de funcionar. ¿Emitir uno nuevo?"))
+                      pedirEnlace(true);
+                  }}
+                  disabled={pidiendo}
+                  className="ml-1 whitespace-nowrap text-ink-muted underline hover:text-warn"
+                >
+                  Renovar
+                </button>
+              )}
+            </p>
+          )}
+          <p className="mt-1 text-[11px] text-ink-faint">
+            Abre una página privada donde el cliente ve lo que falta y sube sus archivos. Desde ahí no puede
+            ver ni borrar nada más.
+          </p>
+        </div>
+      )}
+
+      <p className="mt-2 text-[11px] text-ink-faint">
         Los archivos quedan privados: solo se abren desde aquí y con la sesión iniciada.
       </p>
     </div>

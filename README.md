@@ -66,6 +66,14 @@ Los archivos van a **Vercel Blob con acceso privado**, no a una URL pública: ll
 vercel blob create-store pyxis-documentos --access private
 ```
 
+## Portal del cliente
+
+Desde la carpeta de un cliente, el botón **Copiar enlace para el cliente** genera una dirección privada `/mi/<token>` y la deja en el portapapeles, lista para mandar por WhatsApp. Ahí la persona que está comprando ve qué le falta, con la ayuda de dónde se saca cada papel, y sube sus archivos desde el teléfono. Cuando el broker marca un documento con observaciones, su nota aparece en el portal y el cliente puede reemplazarlo.
+
+Por ese enlace solo viaja lo que el cliente ya sabe de sí mismo: su nombre, el proyecto y la tipología, el nombre de su broker y su propia lista de documentos. Nada de etapa, notas internas, teléfono, precios ni datos de otros clientes. Una prueba fija la lista de campos para que nadie agregue uno sin darse cuenta.
+
+El token es la única credencial, así que el portal está limitado a lo mínimo: solo **añadir** archivos. No permite ver, descargar ni borrar nada, y solo acepta los documentos que le tocan al cliente en su etapa, no los que emite el banco o la notaría. Si el enlace llega a quien no debía, **Renovar** emite uno nuevo y mata el anterior. Cada archivo que llega queda registrado en el historial del cliente, así que el broker lo ve en su ficha.
+
 ## Informe de conversión
 
 `/interno` → **Informe**, solo admin. Arriba: clientes, escrituras, tasa de cierre y ciclo de venta (mediana de días desde que entra el cliente hasta que firma). Después, conversión por proyecto y por broker, con cuántos llegaron a comprometerse aunque después se hayan caído. Abajo, por qué se pierden los clientes y cuánto dura cada etapa.
