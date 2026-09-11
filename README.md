@@ -64,7 +64,7 @@ El mismo cálculo se envía por correo: el cron de Vercel llama a `/api/cron/res
 
 | Variable | Para qué |
 | --- | --- |
-| `CRON_SECRET` | La define Vercel. Solo con ella la ruta envía correos. |
+| `CRON_SECRET` | La defines tú (`vercel env add CRON_SECRET production`); Vercel la manda como `Authorization: Bearer` al disparar el cron. Sin ella la ruta responde 401 y no envía nada. |
 | `RESEND_API_KEY` | Sin ella el resumen se calcula igual pero no sale ningún correo. |
 | `CORREO_DESDE` | Remitente, ej. `Pyxis <alertas@tudominio.cl>`. Por defecto usa el remitente de prueba de Resend. |
 | `NEXT_PUBLIC_SITIO` | Base de los enlaces del correo. Si falta, usa el dominio de la petición. |
