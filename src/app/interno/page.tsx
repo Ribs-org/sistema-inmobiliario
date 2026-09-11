@@ -9,6 +9,8 @@ import Marca from "@/components/Marca";
 import Embudo from "@/components/interno/Embudo";
 import RankingVendedores from "@/components/interno/RankingVendedores";
 import ResumenDiario from "@/components/interno/ResumenDiario";
+import Informe from "@/components/interno/Informe";
+import Documentos from "@/components/interno/Documentos";
 import ProyectosInterno from "@/components/interno/ProyectosInterno";
 import type { Cotizacion } from "@/lib/cotizaciones-store";
 import {
@@ -16,7 +18,10 @@ import {
   ETAPAS_ACTIVAS,
   ETIQUETA_ETAPA,
   ETIQUETA_INTERACCION,
+  ETIQUETA_MOTIVO,
+  MOTIVOS_PERDIDA,
   TIPOS_MANUALES,
+  type MotivoPerdida,
   hoyISO,
   nuevaInteraccion,
   ordenarInteracciones,
@@ -31,6 +36,7 @@ import {
   type Interaccion,
 } from "@/lib/clientes";
 import { fmtUF } from "@/lib/format";
+import { conDocumento } from "@/lib/documentos";
 import { UF_RESPALDO } from "@/lib/uf";
 import {
   disponiblesDeTipologia,
@@ -47,6 +53,8 @@ import { Chip } from "@/components/ui";
 type Auth = "cargando" | "bloqueado" | "abierto";
 type Almacenamiento = "redis" | "ninguno";
 const CLAVE_LOCAL = "ribs:clientes";
+const SIN_ARCHIVOS =
+  "Para adjuntar documentos hace falta el almacenamiento conectado; ahora se guarda solo en este navegador.";
 
 const COLOR_ETAPA: Record<Etapa, string> = {
   nuevo: "bg-line-soft text-ink",
@@ -102,13 +110,17 @@ function nombreTipologia(lista: Proyecto[], proyectoId: string | null, tipId: st
   return lista.find((p) => p.id === proyectoId)?.tipologias.find((t) => t.id === tipId)?.nombre ?? null;
 }
 
-type Seccion = "hoy" | "clientes" | "embudo" | "proyectos";
+type Seccion = "hoy" | "clientes" | "embudo" | "informe" | "proyectos";
 const SECCIONES: { id: Seccion; nombre: string }[] = [
   { id: "hoy", nombre: "Hoy" },
   { id: "clientes", nombre: "Clientes" },
   { id: "embudo", nombre: "Embudo" },
+  { id: "informe", nombre: "Informe" },
   { id: "proyectos", nombre: "Proyectos" },
 ];
+
+/** Secciones que solo ve un administrador. */
+const SOLO_ADMIN: Seccion[] = ["informe", "proyectos"];
 
 export default function Interno() {
   const [auth, setAuth] = useState<Auth>("cargando");
@@ -280,6 +292,48 @@ export default function Interno() {
       (lista) => setEditando(mantenerAbierto ? (lista.find((x) => x.id === c.id) ?? null) : null),
     );
 
+  /**
+   * Los archivos van por /api/documentos. Antes se guarda el cliente tal como está en el
+   * formulario, para que subir un papel no pise lo que el broker acaba de escribir.
+   */
+  const subirDocumento = (c: Cliente, docId: string, archivo: File) => {
+    if (almacenamiento !== "redis") return setAviso(SIN_ARCHIVOS);
+    persistir(
+      async () => {
+        await fetch("/api/clientes", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(c),
+        });
+        const form = new FormData();
+        form.set("cliente", c.id);
+        form.set("doc", docId);
+        form.set("archivo", archivo);
+        return fetch("/api/documentos", { method: "POST", body: form });
+      },
+      () => clientes,
+      (lista) => setEditando(lista.find((x) => x.id === c.id) ?? null),
+    );
+  };
+
+  const quitarDocumento = (c: Cliente, docId: string) => {
+    if (almacenamiento !== "redis") return setAviso(SIN_ARCHIVOS);
+    persistir(
+      async () => {
+        await fetch("/api/clientes", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(c),
+        });
+        return fetch(`/api/documentos?cliente=${encodeURIComponent(c.id)}&doc=${encodeURIComponent(docId)}`, {
+          method: "DELETE",
+        });
+      },
+      () => clientes,
+      (lista) => setEditando(lista.find((x) => x.id === c.id) ?? null),
+    );
+  };
+
   const eliminar = (id: string) => {
     if (!window.confirm("¿Eliminar este cliente? No se puede deshacer.")) return;
     persistir(
@@ -415,7 +469,7 @@ export default function Interno() {
           </span>
         </div>
         <nav className="flex gap-1 rounded-md bg-white/10 p-0.5" aria-label="Secciones">
-          {SECCIONES.filter((s) => admin || s.id !== "proyectos").map((s) => (
+          {SECCIONES.filter((s) => admin || !SOLO_ADMIN.includes(s.id)).map((s) => (
             <button
               key={s.id}
               type="button"
@@ -499,6 +553,13 @@ export default function Interno() {
                 setSeccion("clientes");
                 setEditando(c);
               }}
+            />
+          )}
+          {seccion === "informe" && admin && (
+            <Informe
+              clientes={clientes}
+              proyectos={proyectos}
+              nombres={Object.fromEntries(usuarios.map((u) => [u.id, u.nombre]))}
             />
           )}
           {seccion === "proyectos" && (
@@ -656,6 +717,8 @@ export default function Interno() {
                     existente={clientes.some((c) => c.id === editando.id)}
                     guardando={guardando}
                     onGuardar={guardar}
+                    onSubirDocumento={subirDocumento}
+                    onQuitarDocumento={quitarDocumento}
                     onEliminar={() => eliminar(editando.id)}
                     onCancelar={() => setEditando(null)}
                   />
@@ -687,6 +750,8 @@ function FormularioCliente({
   existente,
   guardando,
   onGuardar,
+  onSubirDocumento,
+  onQuitarDocumento,
   onEliminar,
   onCancelar,
 }: {
@@ -697,6 +762,8 @@ function FormularioCliente({
   existente: boolean;
   guardando: boolean;
   onGuardar: (c: Cliente, mantenerAbierto?: boolean) => void;
+  onSubirDocumento: (c: Cliente, docId: string, archivo: File) => void;
+  onQuitarDocumento: (c: Cliente, docId: string) => void;
   onEliminar: () => void;
   onCancelar: () => void;
 }) {
@@ -837,7 +904,12 @@ function FormularioCliente({
               const etapa = e.target.value as Etapa;
               const sugerida = proximoContactoSugerido(etapa);
               const vencida = !c.proximoContacto || c.proximoContacto < hoyISO();
-              set({ etapa, proximoContacto: vencida ? sugerida : c.proximoContacto });
+              set({
+                etapa,
+                proximoContacto: vencida ? sugerida : c.proximoContacto,
+                // El motivo solo vive mientras el cliente esté perdido.
+                motivoPerdida: etapa === "perdido" ? (c.motivoPerdida ?? null) : null,
+              });
             }}
             className={INPUT}
           >
@@ -857,6 +929,26 @@ function FormularioCliente({
           />
         </Campo>
       </div>
+
+      {c.etapa === "perdido" && (
+        <Campo etiqueta="Motivo de la pérdida">
+          <select
+            value={c.motivoPerdida ?? ""}
+            onChange={(e) => set({ motivoPerdida: (e.target.value || null) as MotivoPerdida | null })}
+            className={INPUT}
+          >
+            <option value="">Sin registrar</option>
+            {MOTIVOS_PERDIDA.map((m) => (
+              <option key={m} value={m}>
+                {ETIQUETA_MOTIVO[m]}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs text-ink-faint">
+            Alimenta el informe de conversión. Si vuelve a una etapa activa, el motivo se borra.
+          </span>
+        </Campo>
+      )}
 
       {usuarios.length > 0 && (
         <Campo etiqueta="Vendedor responsable">
@@ -888,6 +980,19 @@ function FormularioCliente({
           placeholder="Qué busca, presupuesto, qué quedó pendiente…"
         />
       </Campo>
+
+      {existente && (
+        <Documentos
+          cliente={c}
+          guardando={guardando}
+          onEstado={(docId, parte) =>
+            onGuardar({ ...c, documentos: conDocumento(c.documentos, docId, parte) }, true)
+          }
+          onSubir={(docId, archivo) => onSubirDocumento({ ...c, nombre: c.nombre.trim() }, docId, archivo)}
+          onQuitar={(docId) => onQuitarDocumento({ ...c, nombre: c.nombre.trim() }, docId)}
+          onCambioRenta={(tipoRenta) => set({ tipoRenta })}
+        />
+      )}
 
       <Historial
         interacciones={c.interacciones ?? []}

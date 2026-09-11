@@ -56,18 +56,32 @@ Cada cliente tiene un historial de interacciones: las manuales (llamada, WhatsAp
 
 La pestaña **Embudo** muestra una columna por etapa con el conteo, la mediana de días en etapa y cada cliente con los días que lleva ahí (desde el último cambio de etapa). Un cliente en curso con 14 días o más sin avanzar se marca como estancado. Arriba: en curso, estancados, escrituras y tasa de cierre (escrituras sobre escrituras más perdidos).
 
+## Carpeta de documentos
+
+Cada cliente tiene una carpeta con los papeles que piden el banco y la inmobiliaria, agrupados por etapa: para la reserva y el crédito, para la promesa, y para la escritura y la entrega. La lista cambia según cómo recibe sus ingresos el cliente: a quien tiene contrato se le piden liquidaciones y certificado de AFP, y al independiente su carpeta tributaria del SII y sus boletas. Cada documento lleva estado (pendiente, recibido, con observaciones, no aplica), responsable y, cuando ayuda, dónde se consigue. La barra de avance y la frase de lo que falta aparecen en la ficha, en la pestaña **Hoy** y en el correo diario, así que un cliente estancado deja de ser "lleva 20 días" y pasa a ser "le falta la preaprobación".
+
+Los archivos van a **Vercel Blob con acceso privado**, no a una URL pública: llevan cédulas y liquidaciones de sueldo. Se suben y se leen por `/api/documentos`, que comprueba la sesión, que el cliente sea de quien pide, y que la ruta apunte a la carpeta de ese mismo cliente. Se aceptan PDF, JPG, PNG y HEIC de hasta 15 MB. Adjuntar requiere Upstash Redis conectado; en modo navegador la pantalla lo avisa.
+
+## Informe de conversión
+
+`/interno` → **Informe**, solo admin. Arriba: clientes, escrituras, tasa de cierre y ciclo de venta (mediana de días desde que entra el cliente hasta que firma). Después, conversión por proyecto y por broker, con cuántos llegaron a comprometerse aunque después se hayan caído. Abajo, por qué se pierden los clientes y cuánto dura cada etapa.
+
+El motivo de pérdida se elige en la ficha al marcar un cliente como perdido: precio, no califica, compró en otro proyecto, desistió, dejó de responder u otro. Si el cliente vuelve a una etapa activa, el motivo se borra. Los perdidos sin motivo registrado se muestran aparte en vez de esconderse.
+
+Los tiempos por etapa se reconstruyen del historial de cambios de etapa que ya se guardaba. La etapa actual sigue corriendo, así que no entra en la mediana.
+
 ## Resumen diario
 
 La pestaña **Hoy** abre el área interna con la lista de trabajo del día en tres columnas: **atrasados** (la fecha de próximo contacto ya pasó), **para hoy** y **sin avanzar** (14 días o más en la misma etapa, sin contar los dos anteriores). Cada nombre abre la ficha y cada fila lleva un botón de WhatsApp. El admin ve además cómo se reparte ese trabajo entre los brokers.
 
 El mismo cálculo se envía por correo: el cron de Vercel llama a `/api/cron/resumen` a las 11:00 UTC de lunes a viernes (8:00 en Santiago, 7:00 en invierno) y manda a cada broker solo su lista. Variables:
 
-| Variable | Para qué |
-| --- | --- |
-| `CRON_SECRET` | La defines tú (`vercel env add CRON_SECRET production`); Vercel la manda como `Authorization: Bearer` al disparar el cron. Sin ella la ruta responde 401 y no envía nada. |
-| `RESEND_API_KEY` | Sin ella el resumen se calcula igual pero no sale ningún correo. |
-| `CORREO_DESDE` | Remitente, ej. `Pyxis <alertas@tudominio.cl>`. Por defecto usa el remitente de prueba de Resend. |
-| `NEXT_PUBLIC_SITIO` | Base de los enlaces del correo. Si falta, usa el dominio de la petición. |
+| Variable            | Para qué                                                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CRON_SECRET`       | La defines tú (`vercel env add CRON_SECRET production`); Vercel la manda como `Authorization: Bearer` al disparar el cron. Sin ella la ruta responde 401 y no envía nada. |
+| `RESEND_API_KEY`    | Sin ella el resumen se calcula igual pero no sale ningún correo.                                                                                                          |
+| `CORREO_DESDE`      | Remitente, ej. `Pyxis <alertas@tudominio.cl>`. Por defecto usa el remitente de prueba de Resend.                                                                          |
+| `NEXT_PUBLIC_SITIO` | Base de los enlaces del correo. Si falta, usa el dominio de la petición.                                                                                                  |
 
 Resend exige un dominio propio verificado para enviar a terceros, así que hasta tenerlo el correo queda apagado y el resumen vive solo en pantalla. Un admin puede probar el cálculo sin enviar nada con el botón **Probar el correo diario**, que llama a `/api/cron/resumen?dry=1`.
 
@@ -119,12 +133,12 @@ Dos formas de entrar conviven:
 
 El rol sale de `ADMIN_EMAILS` (correos separados por coma) o de `publicMetadata.role = "admin"` en Clerk; cualquier otro usuario es **broker**.
 
-| | Admin | Broker |
-| --- | --- | --- |
-| Clientes | todos, y puede reasignar el vendedor | solo los suyos |
-| Cotizaciones | todas | las suyas |
-| Embudo | filtro por vendedor y ranking del equipo | solo lo suyo |
-| Proyectos, importación, fotos | sí | no (los ve en el mapa) |
+|                               | Admin                                    | Broker                 |
+| ----------------------------- | ---------------------------------------- | ---------------------- |
+| Clientes                      | todos, y puede reasignar el vendedor     | solo los suyos         |
+| Cotizaciones                  | todas                                    | las suyas              |
+| Embudo                        | filtro por vendedor y ranking del equipo | solo lo suyo           |
+| Proyectos, importación, fotos | sí                                       | no (los ve en el mapa) |
 
 Cada cliente y cada cotización guardan `vendedorId` y `vendedorNombre`; la cotización pública muestra el broker que la emitió en vez del contacto genérico.
 

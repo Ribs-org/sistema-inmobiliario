@@ -14,6 +14,7 @@ import {
   ultimaInteraccion,
   type Cliente,
 } from "@/lib/clientes";
+import { resumenFaltantes } from "@/lib/documentos";
 import { resumenPorBroker } from "@/lib/resumen";
 
 type Props = {
@@ -48,6 +49,7 @@ function Fila({
   const proyecto = proyectos.find((p) => p.id === cliente.proyectoId);
   const ultima = ultimaInteraccion(cliente);
   const tel = soloTelefono(cliente.telefono);
+  const faltan = resumenFaltantes(cliente);
   return (
     <li className="flex items-start gap-2 border-b border-line-soft px-3 py-2 last:border-b-0">
       <button
@@ -60,7 +62,11 @@ function Fila({
           {ETIQUETA_ETAPA[cliente.etapa]}
           {proyecto ? ` · ${proyecto.nombre}` : ""}
         </span>
-        {ultima && <span className="mt-0.5 block truncate text-xs text-ink-faint">{ultima.texto}</span>}
+        {faltan ? (
+          <span className="mt-0.5 block truncate text-xs text-warn">{faltan}</span>
+        ) : (
+          ultima && <span className="mt-0.5 block truncate text-xs text-ink-faint">{ultima.texto}</span>
+        )}
       </button>
       {tel && (
         <a

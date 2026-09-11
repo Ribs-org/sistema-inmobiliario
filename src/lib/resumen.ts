@@ -10,6 +10,7 @@ import {
   ultimaInteraccion,
   type Cliente,
 } from "./clientes";
+import { resumenFaltantes } from "./documentos";
 
 export type LineaResumen = {
   id: string;
@@ -32,11 +33,13 @@ export type ResumenBroker = {
 
 function linea(c: Cliente): LineaResumen {
   const ultima = ultimaInteraccion(c);
+  // Si la carpeta está incompleta, eso manda: es lo que traba al cliente.
+  const faltan = resumenFaltantes(c);
   return {
     id: c.id,
     nombre: c.nombre,
     etapa: ETIQUETA_ETAPA[c.etapa],
-    detalle: ultima ? `${ultima.fecha}: ${ultima.texto}` : (c.notas ?? ""),
+    detalle: faltan ?? (ultima ? `${ultima.fecha}: ${ultima.texto}` : (c.notas ?? "")),
     telefono: c.telefono,
   };
 }

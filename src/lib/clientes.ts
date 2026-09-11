@@ -27,6 +27,35 @@ export const ETAPAS_ACTIVAS: Etapa[] = ["nuevo", "contactado", "visita", "reserv
 /** Etapas en que la unidad está comprometida y descuenta stock. */
 export const ETAPAS_RESERVA: Etapa[] = ["reserva", "promesa", "escritura"];
 
+/** Por qué se cae un cliente. Alimenta el informe de conversión. */
+export const MOTIVOS_PERDIDA = [
+  "precio",
+  "no-califica",
+  "competencia",
+  "desistio",
+  "sin-respuesta",
+  "otro",
+] as const;
+export type MotivoPerdida = (typeof MOTIVOS_PERDIDA)[number];
+
+export const ETIQUETA_MOTIVO: Record<MotivoPerdida, string> = {
+  precio: "Precio fuera de presupuesto",
+  "no-califica": "No califica para el crédito",
+  competencia: "Compró en otro proyecto",
+  desistio: "Desistió de comprar",
+  "sin-respuesta": "Dejó de responder",
+  otro: "Otro",
+};
+
+/** Cómo recibe sus ingresos: cambia qué papeles pide el banco. */
+export const TIPOS_RENTA = ["dependiente", "independiente"] as const;
+export type TipoRenta = (typeof TIPOS_RENTA)[number];
+
+export const ETIQUETA_RENTA: Record<TipoRenta, string> = {
+  dependiente: "Con contrato",
+  independiente: "Independiente o a honorarios",
+};
+
 export const TIPOS_INTERACCION = [
   "llamada",
   "whatsapp",
@@ -69,6 +98,48 @@ export type Interaccion = {
   fecha: string;
   texto: string;
   creadoEn: string;
+  /** Solo en las de tipo "etapa": de dónde y hacia dónde se movió. */
+  de?: Etapa;
+  a?: Etapa;
+};
+
+/** Etiqueta de etapa → clave, para leer historiales antiguos que solo guardaron el texto. */
+const ETAPA_POR_ETIQUETA: Record<string, Etapa> = Object.fromEntries(
+  ETAPAS.map((e) => [ETIQUETA_ETAPA[e], e]),
+) as Record<string, Etapa>;
+
+/**
+ * De qué etapa a qué etapa movió una interacción. Usa los campos `de`/`a` y, si no están
+ * (historiales anteriores a que existieran), los deduce del texto "Nuevo → Contactado".
+ */
+export function transicion(i: Interaccion): { de: Etapa; a: Etapa } | null {
+  if (i.tipo !== "etapa") return null;
+  if (i.de && i.a) return { de: i.de, a: i.a };
+  const [de, a] = i.texto.split("→").map((s) => ETAPA_POR_ETIQUETA[s.trim().split(":")[0].trim()]);
+  return de && a ? { de, a } : null;
+}
+
+/** Estado de un documento en la carpeta del cliente. El catálogo está en src/lib/documentos.ts. */
+export const ESTADOS_DOCUMENTO = ["pendiente", "recibido", "observado", "no-aplica"] as const;
+export type EstadoDoc = (typeof ESTADOS_DOCUMENTO)[number];
+
+export const ETIQUETA_ESTADO_DOC: Record<EstadoDoc, string> = {
+  pendiente: "Pendiente",
+  recibido: "Recibido",
+  observado: "Con observaciones",
+  "no-aplica": "No aplica",
+};
+
+export type EstadoDocumento = {
+  /** id del documento en el catálogo */
+  id: string;
+  estado: EstadoDoc;
+  /** Ruta dentro de Vercel Blob; el archivo se sirve por /api/documentos, nunca directo */
+  ruta?: string;
+  /** Nombre original, para mostrarlo */
+  archivo?: string;
+  nota?: string;
+  actualizadoEn: string;
 };
 
 export type Cliente = {
@@ -83,6 +154,12 @@ export type Cliente = {
   etapa: Etapa;
   /** Desde cuándo está en la etapa actual (ISO); si falta, se usa creadoEn */
   etapaDesde?: string;
+  /** Por qué se perdió. Solo tiene sentido en la etapa "perdido"; al salir se borra. */
+  motivoPerdida?: MotivoPerdida | null;
+  /** Con contrato o independiente: define qué papeles pide el banco */
+  tipoRenta?: TipoRenta;
+  /** Carpeta de documentos del cliente (ver src/lib/documentos.ts) */
+  documentos?: EstadoDocumento[];
   /** Fecha ISO (YYYY-MM-DD) del próximo contacto, o null */
   proximoContacto: string | null;
   notas: string;
@@ -139,12 +216,30 @@ function normalizarInteraccion(entrada: unknown): Interaccion | null {
   const t = texto(e.texto, 1000);
   if (!t) return null;
   const fecha = texto(e.fecha, 10);
+  const etapa = (v: unknown) => (ETAPAS.includes(v as Etapa) ? (v as Etapa) : undefined);
   return {
     id: texto(e.id, 40) || idCorto("i"),
     tipo,
     fecha: esFecha(fecha) ? fecha : hoyISO(),
     texto: t,
     creadoEn: texto(e.creadoEn, 40) || new Date().toISOString(),
+    de: etapa(e.de),
+    a: etapa(e.a),
+  };
+}
+
+function normalizarDocumento(entrada: unknown): EstadoDocumento | null {
+  if (!entrada || typeof entrada !== "object") return null;
+  const e = entrada as Record<string, unknown>;
+  const id = texto(e.id, 40);
+  if (!id) return null;
+  return {
+    id,
+    estado: ESTADOS_DOCUMENTO.includes(e.estado as EstadoDoc) ? (e.estado as EstadoDoc) : "pendiente",
+    ruta: texto(e.ruta, 300) || undefined,
+    archivo: texto(e.archivo, 160) || undefined,
+    nota: texto(e.nota, 400) || undefined,
+    actualizadoEn: texto(e.actualizadoEn, 40) || new Date().toISOString(),
   };
 }
 
@@ -160,6 +255,10 @@ export function normalizarCliente(entrada: unknown): Cliente | null {
     .map(normalizarInteraccion)
     .filter((i): i is Interaccion => i !== null)
     .slice(0, 500);
+  const documentos = (Array.isArray(e.documentos) ? e.documentos : [])
+    .map(normalizarDocumento)
+    .filter((d): d is EstadoDocumento => d !== null)
+    .slice(0, 60);
   return nuevoCliente({
     id: texto(e.id, 40) || undefined,
     nombre,
@@ -170,6 +269,13 @@ export function normalizarCliente(entrada: unknown): Cliente | null {
     unidadNumero: texto(e.unidadNumero, 12) || null,
     etapa,
     etapaDesde: texto(e.etapaDesde, 40) || undefined,
+    // El motivo solo se guarda mientras el cliente esté perdido.
+    motivoPerdida:
+      etapa === "perdido" && MOTIVOS_PERDIDA.includes(e.motivoPerdida as MotivoPerdida)
+        ? (e.motivoPerdida as MotivoPerdida)
+        : null,
+    tipoRenta: TIPOS_RENTA.includes(e.tipoRenta as TipoRenta) ? (e.tipoRenta as TipoRenta) : undefined,
+    documentos,
     proximoContacto: esFecha(fecha) ? fecha : null,
     notas: texto(e.notas, 2000),
     interacciones,
@@ -187,11 +293,16 @@ export function normalizarCliente(entrada: unknown): Cliente | null {
 export function reconciliarCliente(nuevo: Cliente, previo: Cliente | undefined): Cliente {
   if (!previo) return { ...nuevo, etapaDesde: nuevo.etapaDesde ?? nuevo.creadoEn };
   const cambioEtapa = previo.etapa !== nuevo.etapa;
+  const motivo = nuevo.etapa === "perdido" ? nuevo.motivoPerdida : null;
   const interacciones = cambioEtapa
     ? [
         nuevaInteraccion({
           tipo: "etapa",
-          texto: `${ETIQUETA_ETAPA[previo.etapa]} → ${ETIQUETA_ETAPA[nuevo.etapa]}`,
+          texto:
+            `${ETIQUETA_ETAPA[previo.etapa]} → ${ETIQUETA_ETAPA[nuevo.etapa]}` +
+            (motivo ? `: ${ETIQUETA_MOTIVO[motivo]}` : ""),
+          de: previo.etapa,
+          a: nuevo.etapa,
         }),
         ...nuevo.interacciones,
       ]
