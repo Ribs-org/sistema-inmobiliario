@@ -342,31 +342,55 @@ export default function Interno() {
     );
   };
 
+  /**
+   * Carga los clientes ficticios. Los que ya estaban se reescriben con su versión original,
+   * para que una demo manoseada vuelva a su estado de fábrica y recoja lo que se haya
+   * agregado después al guion (carpetas de documentos, motivos de pérdida, etc.).
+   */
   const cargarDemo = async () => {
-    const demo = clientesDemo().filter((d) => !clientes.some((c) => c.id === d.id));
-    if (demo.length === 0) return setAviso("Los clientes de demo ya están cargados.");
+    const demo = clientesDemo();
+    const existentes = demo.filter((d) => clientes.some((c) => c.id === d.id)).length;
+    if (
+      existentes > 0 &&
+      !window.confirm(
+        `${existentes} de estos clientes de demo ya están cargados y se van a dejar como estaban al principio. Los clientes reales no se tocan. ¿Continuar?`,
+      )
+    )
+      return;
     setGuardando(true);
     setAviso(null);
     try {
       if (almacenamiento === "redis") {
         let lista: Cliente[] = clientes;
+        const aplicar = async (url: string, init: RequestInit) => {
+          const r = await fetch(url, init);
+          if (r.status === 401) {
+            setAuth("bloqueado");
+            throw new Error("Sesión cerrada");
+          }
+          const j = (await r.json()) as { clientes?: Cliente[]; error?: string };
+          if (!r.ok || !j.clientes) throw new Error(j.error ?? "No se pudo cargar la demo");
+          lista = j.clientes;
+        };
         for (const c of demo) {
-          const r = await fetch("/api/clientes", {
+          // Se borra antes de recrear: al guardar sobre uno existente el servidor conserva
+          // sus fechas, y aquí lo que se quiere es dejarlo tal como nace en el guion.
+          if (lista.some((x) => x.id === c.id)) {
+            await aplicar(`/api/clientes?id=${encodeURIComponent(c.id)}`, { method: "DELETE" });
+          }
+          await aplicar("/api/clientes", {
             method: "POST",
             headers: { "content-type": "application/json" },
             body: JSON.stringify(c),
           });
-          if (r.status === 401) return setAuth("bloqueado");
-          const j = (await r.json()) as { clientes?: Cliente[]; error?: string };
-          if (!r.ok || !j.clientes) throw new Error(j.error ?? "No se pudo cargar la demo");
-          lista = j.clientes;
         }
         setClientes(lista);
       } else {
-        const lista = [...clientes, ...demo];
+        const lista = [...clientes.filter((c) => !demo.some((d) => d.id === c.id)), ...demo];
         escribirLocal(lista);
         setClientes(lista);
       }
+      setAviso(`Listo: ${demo.length} clientes de demo cargados.`);
     } catch (err) {
       setAviso(err instanceof Error ? err.message : "No se pudo cargar la demo");
     } finally {
@@ -613,7 +637,7 @@ export default function Interno() {
                     onClick={cargarDemo}
                     disabled={guardando}
                     className="rounded-md border border-line px-3 py-1.5 text-sm text-ink-muted hover:border-ink hover:text-ink disabled:opacity-50"
-                    title="Agrega clientes ficticios para probar la pantalla"
+                    title="Carga los clientes ficticios y deja los que ya estaban como al principio"
                   >
                     Cargar demo
                   </button>

@@ -13,6 +13,7 @@ import {
   guardarCliente,
   listarClientes,
 } from "@/lib/clientes-store";
+import { borrarArchivo } from "@/lib/documentos-archivo";
 import { guardarProyecto, listarProyectosGuardados } from "@/lib/proyectos-store";
 import { disponiblesDeTipologia, tieneUnidades } from "@/lib/unidades";
 
@@ -132,6 +133,8 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: "Falta el id" }, { status: 400 });
   const previo = (await listarClientes()).find((c) => c.id === id);
   if (previo && !puedeVer(s, previo.vendedorId)) return prohibido();
+  // Sus documentos se van con él: son cédulas y liquidaciones, no deben quedar sueltas.
+  for (const d of previo?.documentos ?? []) await borrarArchivo(d.ruta, id);
   return NextResponse.json({
     clientes: visibles(await eliminarCliente(id), s),
     almacenamiento: "redis",
