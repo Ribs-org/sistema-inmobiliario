@@ -15,6 +15,14 @@ const localizacion = {
       subtitle: "Área interna del equipo comercial",
     },
   },
+  signUp: {
+    ...esES.signUp,
+    start: {
+      ...esES.signUp?.start,
+      title: "Crear tu cuenta en Pyxis",
+      subtitle: "Para brokers del equipo comercial",
+    },
+  },
 };
 
 export default function ProveedorAuth({ children }: { children: ReactNode }) {

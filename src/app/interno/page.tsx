@@ -444,6 +444,9 @@ export default function Interno() {
               <Link href="/ingresar" className="font-medium text-accent hover:underline">
                 Entrar con mi cuenta de broker
               </Link>
+              <Link href="/registrarse" className="mt-1 block text-xs text-ink-muted hover:text-ink">
+                Todavía no tengo cuenta
+              </Link>
             </p>
           )}
           <Link href="/" className="mt-4 block text-center text-xs text-ink-muted hover:text-ink">

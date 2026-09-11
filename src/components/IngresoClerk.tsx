@@ -3,5 +3,5 @@
 import { SignIn } from "@clerk/nextjs";
 
 export default function IngresoClerk() {
-  return <SignIn routing="hash" fallbackRedirectUrl="/interno" signUpUrl="/ingresar" />;
+  return <SignIn routing="hash" fallbackRedirectUrl="/interno" signUpUrl="/registrarse" />;
 }
