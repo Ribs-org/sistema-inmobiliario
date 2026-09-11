@@ -9,6 +9,7 @@ import { simularCredito } from "@/lib/credito";
 import { fmtCLP, fmtDist, fmtM2, fmtUF } from "@/lib/format";
 import type { ProyectoEnriquecido } from "@/lib/proyectos";
 import { arriendoEstimadoUF } from "@/lib/rentabilidad";
+import { disponiblesDeTipologia } from "@/lib/unidades";
 import Galeria from "./Galeria";
 import Marca from "./Marca";
 
@@ -123,7 +124,7 @@ export default function VistaProyecto({ proyecto: p, valorUF, tasaAnualPct, cont
                       </div>
                       <p className="text-sm text-ink-muted">
                         {fmtM2(t.m2Utiles)} útiles + {fmtM2(t.m2Terraza)} terraza
-                        {t.orientacion ? ` · ${t.orientacion}` : ""} · {t.disponibles} disponibles
+                        {t.orientacion ? ` · ` : ""} · {disponiblesDeTipologia(p, t)} disponibles
                       </p>
                       <dl className="mt-2 grid grid-cols-3 gap-2 text-sm">
                         <div>

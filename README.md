@@ -56,6 +56,31 @@ Cada cliente tiene un historial de interacciones: las manuales (llamada, WhatsAp
 
 La pestaña **Embudo** muestra una columna por etapa con el conteo, la mediana de días en etapa y cada cliente con los días que lleva ahí (desde el último cambio de etapa). Un cliente en curso con 14 días o más sin avanzar se marca como estancado. Arriba: en curso, estancados, escrituras y tasa de cierre (escrituras sobre escrituras más perdidos).
 
+## Resumen diario
+
+La pestaña **Hoy** abre el área interna con la lista de trabajo del día en tres columnas: **atrasados** (la fecha de próximo contacto ya pasó), **para hoy** y **sin avanzar** (14 días o más en la misma etapa, sin contar los dos anteriores). Cada nombre abre la ficha y cada fila lleva un botón de WhatsApp. El admin ve además cómo se reparte ese trabajo entre los brokers.
+
+El mismo cálculo se envía por correo: el cron de Vercel llama a `/api/cron/resumen` a las 11:00 UTC de lunes a viernes (8:00 en Santiago, 7:00 en invierno) y manda a cada broker solo su lista. Variables:
+
+| Variable | Para qué |
+| --- | --- |
+| `CRON_SECRET` | La define Vercel. Solo con ella la ruta envía correos. |
+| `RESEND_API_KEY` | Sin ella el resumen se calcula igual pero no sale ningún correo. |
+| `CORREO_DESDE` | Remitente, ej. `Pyxis <alertas@tudominio.cl>`. Por defecto usa el remitente de prueba de Resend. |
+| `NEXT_PUBLIC_SITIO` | Base de los enlaces del correo. Si falta, usa el dominio de la petición. |
+
+Resend exige un dominio propio verificado para enviar a terceros, así que hasta tenerlo el correo queda apagado y el resumen vive solo en pantalla. Un admin puede probar el cálculo sin enviar nada con el botón **Probar el correo diario**, que llama a `/api/cron/resumen?dry=1`.
+
+## Próximo contacto sugerido
+
+Al cambiar la etapa de un cliente, el formulario propone la fecha del siguiente contacto: un día para un cliente nuevo, tres tras contactarlo o agendarle visita, cinco en reserva y siete en promesa. En escritura y perdido no sugiere nada. La propuesta solo pisa la fecha actual si estaba vacía o vencida, así que un compromiso ya tomado con el cliente no se pierde.
+
+## Unidades
+
+Un proyecto puede llevar el detalle departamento por departamento: número, piso, tipología, orientación, precio propio y estado (disponible, reservada, vendida, bloqueada). En **Proyectos** hay un generador que arma la grilla a partir de pisos y unidades por piso, y una tabla filtrable para editarlas.
+
+Cuando un proyecto tiene unidades cargadas, la disponibilidad que se muestra en todas partes sale de ellas y no del contador por tipología. Al pasar un cliente a reserva, promesa o escritura, su unidad queda tomada; si vuelve a una etapa anterior o se pierde, se libera. Los proyectos sin detalle siguen funcionando con el contador `disponibles` de cada tipología.
+
 ## Deploy
 
 El proyecto de Vercel está conectado al repo `Ribs-org/sistema-inmobiliario`: cada push a `main` despliega a producción y cada rama o PR genera un preview. GitHub Actions corre typecheck, lint y tests en cada push y PR (`.github/workflows/ci.yml`). El deploy manual con `vercel --prod` sigue funcionando pero ya no hace falta.

@@ -4,6 +4,16 @@ import { useEffect, useMemo, useState, type ComponentType, type FormEvent } from
 import { ETIQUETA_ESTADO_VENTA, type EstadoVenta, type Proyecto, type Tipologia } from "@/data/proyectos";
 import { fmtUF } from "@/lib/format";
 import { proyectosDesdeCSV, proyectosDesdeJSON, proyectosDesdeXLSX } from "@/lib/importar-proyectos";
+import {
+  disponiblesDeTipologia,
+  disponiblesTotales,
+  ESTADOS_UNIDAD,
+  ETIQUETA_ESTADO_UNIDAD,
+  generarUnidades,
+  ordenarUnidades,
+  type EstadoUnidad,
+  type Unidad,
+} from "@/lib/unidades";
 import { BadgeEstado } from "@/components/ui";
 
 type Props = {
@@ -307,14 +317,14 @@ export default function ProyectosInterno({ proyectos, origen, onCambio, onBloque
                   <td className="hidden px-3 py-2.5 text-right md:table-cell">{p.tipologias.length}</td>
                   <td className="px-3 py-2.5 text-right">
                     {(() => {
-                      const total = p.tipologias.reduce((s, t) => s + t.disponibles, 0);
-                      const pocas = p.tipologias.filter((t) => t.disponibles <= 3);
+                      const total = disponiblesTotales(p);
+                      const pocas = p.tipologias.filter((t) => disponiblesDeTipologia(p, t) <= 3);
                       return (
                         <>
                           <span className={total <= 3 ? "font-semibold text-warn" : ""}>{total}</span>
                           {pocas.length > 0 && total > 3 && (
                             <span className="block text-xs text-warn">
-                              {pocas.map((t) => `${t.nombre}: ${t.disponibles}`).join(" · ")}
+                              {pocas.map((t) => `${t.nombre}: ${disponiblesDeTipologia(p, t)}`).join(" · ")}
                             </span>
                           )}
                         </>
@@ -659,6 +669,8 @@ function FormularioProyecto({
         </p>
       </div>
 
+      <EditorUnidades proyecto={p} onCambio={(unidadesDetalle) => set({ unidadesDetalle })} />
+
       <div className="flex items-center justify-between pt-1">
         {existente ? (
           <button type="button" onClick={onEliminar} className="text-sm text-warn hover:underline">
@@ -887,6 +899,195 @@ function Plano({
             className="hidden"
           />
         </label>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Detalle de unidades: se generan desde la grilla del edificio y luego se ajustan a mano.
+ * Mientras no haya unidades, el stock sigue saliendo del contador de cada tipología.
+ */
+function EditorUnidades({
+  proyecto,
+  onCambio,
+}: {
+  proyecto: Proyecto;
+  onCambio: (unidades: Unidad[] | undefined) => void;
+}) {
+  const unidades = proyecto.unidadesDetalle ?? [];
+  const [porPiso, setPorPiso] = useState(4);
+  const [desdePiso, setDesdePiso] = useState(1);
+  const [pisos, setPisos] = useState(proyecto.pisos || 10);
+  const [filtro, setFiltro] = useState<EstadoUnidad | "todas">("todas");
+
+  const generar = () => {
+    const ids = proyecto.tipologias.map((t) => t.id).filter(Boolean);
+    if (ids.length === 0) return;
+    if (unidades.length > 0 && !window.confirm("Se reemplaza el detalle actual de unidades. ¿Seguir?"))
+      return;
+    onCambio(generarUnidades(pisos, porPiso, ids, desdePiso));
+  };
+
+  const cambiar = (numero: string, parte: Partial<Unidad>) =>
+    onCambio(unidades.map((u) => (u.numero === numero ? { ...u, ...parte } : u)));
+
+  const visibles = ordenarUnidades(
+    filtro === "todas" ? unidades : unidades.filter((u) => u.estado === filtro),
+  );
+  const porEstado = ESTADOS_UNIDAD.map((e) => ({ e, n: unidades.filter((u) => u.estado === e).length }));
+
+  return (
+    <div className="rounded-lg border border-line-soft bg-fondo/50 p-3">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs font-medium text-ink-muted">
+          Unidades {unidades.length > 0 ? `(${unidades.length})` : "· opcional"}
+        </span>
+        {unidades.length > 0 && (
+          <button
+            type="button"
+            onClick={() => onCambio(undefined)}
+            className="text-xs text-warn hover:underline"
+          >
+            Quitar detalle
+          </button>
+        )}
+      </div>
+
+      {unidades.length === 0 ? (
+        <p className="mb-2 text-xs text-ink-faint">
+          Sin detalle, el stock es el número de disponibles por tipología. Genera la grilla para reservar
+          unidades concretas por piso.
+        </p>
+      ) : (
+        <div className="mb-2 flex flex-wrap gap-2 text-xs">
+          {porEstado.map(({ e, n }) => (
+            <button
+              key={e}
+              type="button"
+              onClick={() => setFiltro(filtro === e ? "todas" : e)}
+              className={`rounded-full border px-2 py-0.5 ${
+                filtro === e ? "border-ink bg-ink text-white" : "border-line text-ink-muted hover:border-ink"
+              }`}
+            >
+              {ETIQUETA_ESTADO_UNIDAD[e]}: {n}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-end gap-2 text-xs">
+        <label className="block">
+          <span className="mb-1 block text-ink-muted">Pisos</span>
+          <input
+            type="number"
+            min={1}
+            max={80}
+            value={pisos}
+            onChange={(e) => setPisos(Number(e.target.value))}
+            className={`${INPUT} w-20`}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-ink-muted">Desde el piso</span>
+          <input
+            type="number"
+            min={-3}
+            max={80}
+            value={desdePiso}
+            onChange={(e) => setDesdePiso(Number(e.target.value))}
+            className={`${INPUT} w-20`}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-ink-muted">Por piso</span>
+          <input
+            type="number"
+            min={1}
+            max={20}
+            value={porPiso}
+            onChange={(e) => setPorPiso(Number(e.target.value))}
+            className={`${INPUT} w-20`}
+          />
+        </label>
+        <button
+          type="button"
+          onClick={generar}
+          className="rounded-md border border-line px-3 py-1.5 hover:border-ink"
+        >
+          Generar unidades
+        </button>
+      </div>
+
+      {visibles.length > 0 && (
+        <div className="scroll-thin mt-3 max-h-64 overflow-y-auto rounded-md border border-line-soft bg-panel">
+          <table className="w-full text-xs">
+            <thead className="sticky top-0 bg-fondo/90 text-left text-ink-muted">
+              <tr>
+                <th className="px-2 py-1 font-medium">Unidad</th>
+                <th className="px-2 py-1 font-medium">Piso</th>
+                <th className="px-2 py-1 font-medium">Tipología</th>
+                <th className="px-2 py-1 font-medium">Orientación</th>
+                <th className="px-2 py-1 font-medium">Precio UF</th>
+                <th className="px-2 py-1 font-medium">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibles.map((u) => (
+                <tr key={u.numero} className="border-t border-line-soft">
+                  <td className="px-2 py-1 font-medium">{u.numero}</td>
+                  <td className="px-2 py-1">{u.piso}</td>
+                  <td className="px-2 py-1">
+                    <select
+                      value={u.tipologiaId}
+                      onChange={(e) => cambiar(u.numero, { tipologiaId: e.target.value })}
+                      className="rounded border border-line bg-panel px-1 py-0.5"
+                    >
+                      {proyecto.tipologias.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="px-2 py-1">
+                    <input
+                      value={u.orientacion ?? ""}
+                      onChange={(e) => cambiar(u.numero, { orientacion: e.target.value || undefined })}
+                      className="w-24 rounded border border-line bg-panel px-1 py-0.5"
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      value={u.precioUF ?? ""}
+                      placeholder={String(
+                        proyecto.tipologias.find((t) => t.id === u.tipologiaId)?.precioUF ?? "",
+                      )}
+                      onChange={(e) => cambiar(u.numero, { precioUF: Number(e.target.value) || undefined })}
+                      className="w-20 rounded border border-line bg-panel px-1 py-0.5 text-right"
+                    />
+                  </td>
+                  <td className="px-2 py-1">
+                    <select
+                      value={u.estado}
+                      onChange={(e) => cambiar(u.numero, { estado: e.target.value as EstadoUnidad })}
+                      className="rounded border border-line bg-panel px-1 py-0.5"
+                    >
+                      {ESTADOS_UNIDAD.map((e) => (
+                        <option key={e} value={e}>
+                          {ETIQUETA_ESTADO_UNIDAD[e]}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

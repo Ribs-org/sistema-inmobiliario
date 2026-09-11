@@ -5,6 +5,7 @@ import type { Proyecto } from "@/data/proyectos";
 import { fmtCLP, fmtUF } from "@/lib/format";
 import {
   diasEnEtapa,
+  DIAS_ESTANCADO,
   ETAPAS,
   ETAPAS_ACTIVAS,
   ETIQUETA_ETAPA,
@@ -29,9 +30,6 @@ export function comisionUF(c: Cliente, proyectos: Proyecto[]): number {
   if (!p || !t) return 0;
   return (t.precioUF * (p.comisionPct ?? COMISION_POR_DEFECTO_PCT)) / 100;
 }
-
-/** Días en etapa a partir de los cuales un cliente activo se marca como estancado. */
-export const DIAS_ESTANCADO = 14;
 
 function mediana(xs: number[]) {
   if (xs.length === 0) return null;

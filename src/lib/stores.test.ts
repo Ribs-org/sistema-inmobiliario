@@ -35,7 +35,8 @@ describe("normalizarProyecto", () => {
     expect(p.amenidades).toEqual(["Quincho", "Gimnasio"]);
     expect(p.pieMinimoPct).toBe(15);
     expect(p.tipologias).toHaveLength(1);
-    expect(p.tipologias[0].precioUF).toBe(3.5);
+    // "3.500" en formato chileno son tres mil quinientas UF, no tres coma cinco.
+    expect(p.tipologias[0].precioUF).toBe(3500);
   });
 
   it("conserva el id al editar", () => {

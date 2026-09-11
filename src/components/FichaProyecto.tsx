@@ -7,6 +7,7 @@ import { fmtCLP, fmtDist, fmtM2, fmtUF } from "@/lib/format";
 import type { EstacionCercana } from "@/lib/geo";
 import type { ProyectoEnriquecido } from "@/lib/proyectos";
 import { arriendoEstimadoUF } from "@/lib/rentabilidad";
+import { disponiblesDeTipologia } from "@/lib/unidades";
 import Galeria from "./Galeria";
 import { BadgeEstado, Dato, EtiquetaLinea } from "./ui";
 
@@ -128,7 +129,8 @@ export default function FichaProyecto({
                 </div>
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-xs text-ink-muted">
-                    {fmtUF(Math.round(t.precioUF / t.m2Utiles))}/m² · {t.disponibles} disponibles
+                    {fmtUF(Math.round(t.precioUF / t.m2Utiles))}/m² · {disponiblesDeTipologia(p, t)}{" "}
+                    disponibles
                     <span className="block">
                       Arriendo est. {fmtUF(t.arriendoUF ?? arriendoEstimadoUF(t.precioUF), 2)} · rentabilidad
                       bruta{" "}

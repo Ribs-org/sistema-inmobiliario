@@ -78,6 +78,8 @@ export type Cliente = {
   email: string;
   proyectoId: string | null;
   tipologiaId: string | null;
+  /** Unidad concreta comprometida, si el proyecto tiene detalle de unidades */
+  unidadNumero?: string | null;
   etapa: Etapa;
   /** Desde cuándo está en la etapa actual (ISO); si falta, se usa creadoEn */
   etapaDesde?: string;
@@ -165,6 +167,7 @@ export function normalizarCliente(entrada: unknown): Cliente | null {
     email: texto(e.email, 120),
     proyectoId: texto(e.proyectoId, 60) || null,
     tipologiaId: texto(e.tipologiaId, 10) || null,
+    unidadNumero: texto(e.unidadNumero, 12) || null,
     etapa,
     etapaDesde: texto(e.etapaDesde, 40) || undefined,
     proximoContacto: esFecha(fecha) ? fecha : null,
@@ -206,6 +209,31 @@ export function hoyISO(): string {
   const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 10);
 }
+
+/** Días hasta el próximo contacto que se sugieren al entrar a cada etapa; null = sin seguimiento. */
+export const DIAS_PROXIMO_CONTACTO: Record<Etapa, number | null> = {
+  nuevo: 1,
+  contactado: 3,
+  visita: 3,
+  reserva: 5,
+  promesa: 7,
+  escritura: null,
+  perdido: null,
+};
+
+export function sumarDiasISO(iso: string, dias: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d + dias)).toISOString().slice(0, 10);
+}
+
+/** Fecha sugerida de próximo contacto para una etapa, o null si esa etapa ya no requiere seguimiento. */
+export function proximoContactoSugerido(etapa: Etapa, hoy = hoyISO()): string | null {
+  const dias = DIAS_PROXIMO_CONTACTO[etapa];
+  return dias === null ? null : sumarDiasISO(hoy, dias);
+}
+
+/** Días en la misma etapa a partir de los cuales un cliente activo se marca como estancado. */
+export const DIAS_ESTANCADO = 14;
 
 /** Días completos que el cliente lleva en su etapa actual. */
 export function diasEnEtapa(c: Cliente, ahora = Date.now()): number {

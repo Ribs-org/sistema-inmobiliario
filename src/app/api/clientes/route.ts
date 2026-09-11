@@ -14,6 +14,7 @@ import {
   listarClientes,
 } from "@/lib/clientes-store";
 import { guardarProyecto, listarProyectosGuardados } from "@/lib/proyectos-store";
+import { disponiblesDeTipologia, tieneUnidades } from "@/lib/unidades";
 
 export const dynamic = "force-dynamic";
 
@@ -29,19 +30,46 @@ const sinAlmacenamiento = () =>
 async function ajustarStock(cliente: Cliente, previo: Cliente | undefined): Promise<Cliente> {
   const reservadoAntes = !!previo && ETAPAS_RESERVA.includes(previo.etapa);
   const reservadoAhora = ETAPAS_RESERVA.includes(cliente.etapa);
-  if (reservadoAntes === reservadoAhora || !cliente.proyectoId || !cliente.tipologiaId) return cliente;
-  const delta = reservadoAhora ? -1 : 1;
+  const cambioUnidad = reservadoAhora && previo?.unidadNumero !== cliente.unidadNumero;
+  if (reservadoAntes === reservadoAhora && !cambioUnidad) return cliente;
+  if (!cliente.proyectoId || !cliente.tipologiaId) return cliente;
   const proyecto = (await listarProyectosGuardados()).find((p) => p.id === cliente.proyectoId);
   const tip = proyecto?.tipologias.find((t) => t.id === cliente.tipologiaId);
   if (!proyecto || !tip) return cliente;
-  tip.disponibles = Math.max(0, tip.disponibles + delta);
+
+  const notas: string[] = [];
+  if (tieneUnidades(proyecto)) {
+    // Con detalle de unidades: se marca la unidad concreta y se libera la anterior.
+    const liberar = (numero: string | null | undefined) => {
+      const u = proyecto.unidadesDetalle!.find((x) => x.numero === numero && x.clienteId === cliente.id);
+      if (!u) return;
+      u.estado = "disponible";
+      u.clienteId = null;
+      notas.push(`se libera la unidad ${u.numero}`);
+    };
+    if (!reservadoAhora || cambioUnidad) liberar(previo?.unidadNumero);
+    if (reservadoAhora && cliente.unidadNumero) {
+      const u = proyecto.unidadesDetalle!.find((x) => x.numero === cliente.unidadNumero);
+      if (u && (u.estado === "disponible" || u.clienteId === cliente.id)) {
+        u.estado = cliente.etapa === "escritura" ? "vendida" : "reservada";
+        u.clienteId = cliente.id;
+        notas.push(`${u.numero} queda ${u.estado}`);
+      }
+    }
+  } else if (reservadoAntes !== reservadoAhora) {
+    // Sin detalle: se mueve el contador de la tipología.
+    tip.disponibles = Math.max(0, tip.disponibles + (reservadoAhora ? -1 : 1));
+    notas.push(`${reservadoAhora ? "reserva" : "se libera"} ${tip.nombre}`);
+  }
+  if (notas.length === 0) return cliente;
   await guardarProyecto(proyecto);
+
   return {
     ...cliente,
     interacciones: [
       nuevaInteraccion({
         tipo: "stock",
-        texto: `${delta < 0 ? "Reserva" : "Se libera"} ${tip.nombre} en ${proyecto.nombre}: quedan ${tip.disponibles} disponibles`,
+        texto: `${proyecto.nombre}: ${notas.join(", ")}. Quedan ${disponiblesDeTipologia(proyecto, tip)} ${tip.nombre} disponibles`,
       }),
       ...cliente.interacciones,
     ],

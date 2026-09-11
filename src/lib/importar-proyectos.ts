@@ -1,6 +1,8 @@
 // Importación masiva de proyectos desde CSV (una fila por tipología) o JSON.
 // El CSV usa ";" o "," como separador (se detecta) y acepta decimales con coma.
 
+import { parseNumero } from "./format";
+
 export const COLUMNAS_CSV = [
   "proyecto_id",
   "proyecto",
@@ -67,11 +69,7 @@ export function parsearCSV(texto: string): string[][] {
 
 /** Número con formato chileno: "3.250" y "38,5" y "-33,4555" se leen bien. */
 const num = (v: string | undefined) => {
-  let s = (v ?? "").trim();
-  if (!s) return undefined;
-  if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
-  else if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, "");
-  const n = Number(s);
+  const n = parseNumero(v);
   return Number.isFinite(n) ? n : undefined;
 };
 const si = (v: string | undefined) => /^(s[ií]|true|1|x)$/i.test((v ?? "").trim());

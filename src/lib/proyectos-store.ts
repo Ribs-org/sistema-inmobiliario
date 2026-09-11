@@ -3,6 +3,8 @@
 
 import type { EstadoVenta, Proyecto, Tipologia } from "@/data/proyectos";
 import { proyectosMuestra } from "@/data/proyectos-muestra";
+import { parseNumero } from "./format";
+import { normalizarUnidades } from "./unidades";
 import { almacenamientoDisponible, escribirLista, leerLista } from "./redis";
 
 const CLAVE = "pyxis:proyectos";
@@ -76,7 +78,7 @@ export function urlImagen(v: unknown): string | undefined {
   }
 }
 const numero = (v: unknown, min: number, max: number, def = 0) => {
-  const n = typeof v === "number" ? v : Number(String(v ?? "").replace(",", "."));
+  const n = parseNumero(v);
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : def;
 };
 
@@ -144,6 +146,10 @@ export function normalizarProyecto(entrada: unknown): Proyecto | null {
     caminatas:
       e.caminatas && typeof e.caminatas === "object" ? (e.caminatas as Proyecto["caminatas"]) : undefined,
     comisionPct: numero(e.comisionPct, 0, 20) || undefined,
+    unidadesDetalle: normalizarUnidades(
+      e.unidadesDetalle,
+      tipologias.map((t) => t.id),
+    ),
     imagenes: Array.isArray(e.imagenes)
       ? e.imagenes
           .map(urlImagen)

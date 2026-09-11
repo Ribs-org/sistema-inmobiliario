@@ -8,6 +8,7 @@ import { proyectosMuestra } from "@/data/proyectos-muestra";
 import Marca from "@/components/Marca";
 import Embudo from "@/components/interno/Embudo";
 import RankingVendedores from "@/components/interno/RankingVendedores";
+import ResumenDiario from "@/components/interno/ResumenDiario";
 import ProyectosInterno from "@/components/interno/ProyectosInterno";
 import type { Cotizacion } from "@/lib/cotizaciones-store";
 import {
@@ -24,12 +25,20 @@ import {
   type TipoInteraccion,
   nuevoCliente,
   ordenarPorSeguimiento,
+  proximoContactoSugerido,
   type Cliente,
   type Etapa,
   type Interaccion,
 } from "@/lib/clientes";
 import { fmtUF } from "@/lib/format";
 import { UF_RESPALDO } from "@/lib/uf";
+import {
+  disponiblesDeTipologia,
+  ETIQUETA_ESTADO_UNIDAD,
+  ordenarUnidades,
+  precioUnidad,
+  tieneUnidades,
+} from "@/lib/unidades";
 import type { Sesion } from "@/lib/auth";
 import type { Usuario } from "@/app/api/usuarios/route";
 import BotonUsuario from "@/components/BotonUsuario";
@@ -93,8 +102,9 @@ function nombreTipologia(lista: Proyecto[], proyectoId: string | null, tipId: st
   return lista.find((p) => p.id === proyectoId)?.tipologias.find((t) => t.id === tipId)?.nombre ?? null;
 }
 
-type Seccion = "clientes" | "embudo" | "proyectos";
+type Seccion = "hoy" | "clientes" | "embudo" | "proyectos";
 const SECCIONES: { id: Seccion; nombre: string }[] = [
+  { id: "hoy", nombre: "Hoy" },
   { id: "clientes", nombre: "Clientes" },
   { id: "embudo", nombre: "Embudo" },
   { id: "proyectos", nombre: "Proyectos" },
@@ -112,7 +122,7 @@ export default function Interno() {
   const [editando, setEditando] = useState<Cliente | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [seccion, setSeccion] = useState<Seccion>("clientes");
+  const [seccion, setSeccion] = useState<Seccion>("hoy");
   const [proyectos, setProyectos] = useState<Proyecto[]>(proyectosMuestra());
   const [origenProyectos, setOrigenProyectos] = useState<"redis" | "muestra">("muestra");
   const [valorUF, setValorUF] = useState(UF_RESPALDO);
@@ -435,6 +445,19 @@ export default function Interno() {
 
       <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-4 py-5 lg:px-8">
+          {seccion === "hoy" && (
+            <ResumenDiario
+              clientes={clientes}
+              proyectos={proyectos}
+              nombres={Object.fromEntries(usuarios.map((u) => [u.id, u.nombre]))}
+              admin={!!admin}
+              nombreSesion={sesion?.nombre ?? "equipo"}
+              onAbrir={(c) => {
+                setSeccion("clientes");
+                setEditando(c);
+              }}
+            />
+          )}
           {seccion === "embudo" && admin && (
             <RankingVendedores
               clientes={clientes}
@@ -755,13 +778,13 @@ function FormularioCliente({
         <Campo etiqueta="Tipología">
           <select
             value={c.tipologiaId ?? ""}
-            onChange={(e) => set({ tipologiaId: e.target.value || null })}
+            onChange={(e) => set({ tipologiaId: e.target.value || null, unidadNumero: null })}
             className={INPUT}
           >
             <option value="">Sin definir</option>
             {proyecto.tipologias.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.nombre} · {fmtUF(t.precioUF)}
+                {t.nombre} · {fmtUF(t.precioUF)} · {disponiblesDeTipologia(proyecto, t)} disponibles
               </option>
             ))}
           </select>
@@ -776,10 +799,48 @@ function FormularioCliente({
           )}
         </Campo>
       )}
+      {proyecto && tipologia && tieneUnidades(proyecto) && (
+        <Campo etiqueta="Unidad">
+          <select
+            value={c.unidadNumero ?? ""}
+            onChange={(e) => set({ unidadNumero: e.target.value || null })}
+            className={INPUT}
+          >
+            <option value="">Sin elegir</option>
+            {ordenarUnidades(
+              proyecto.unidadesDetalle!.filter(
+                (u) =>
+                  u.tipologiaId === tipologia.id &&
+                  (u.estado === "disponible" || u.numero === c.unidadNumero),
+              ),
+            ).map((u) => (
+              <option key={u.numero} value={u.numero}>
+                {u.numero} · piso {u.piso}
+                {u.orientacion ? ` · ${u.orientacion}` : ""} · {fmtUF(precioUnidad(proyecto, u))}
+                {u.estado === "disponible" ? "" : ` · ${ETIQUETA_ESTADO_UNIDAD[u.estado]}`}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs text-ink-faint">
+            Al pasar a reserva, promesa o escritura la unidad queda tomada; si el cliente se pierde, se
+            libera.
+          </span>
+        </Campo>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <Campo etiqueta="Etapa">
-          <select value={c.etapa} onChange={(e) => set({ etapa: e.target.value as Etapa })} className={INPUT}>
+          <select
+            value={c.etapa}
+            onChange={(e) => {
+              // Al avanzar de etapa se propone la próxima gestión si no había fecha o ya pasó.
+              const etapa = e.target.value as Etapa;
+              const sugerida = proximoContactoSugerido(etapa);
+              const vencida = !c.proximoContacto || c.proximoContacto < hoyISO();
+              set({ etapa, proximoContacto: vencida ? sugerida : c.proximoContacto });
+            }}
+            className={INPUT}
+          >
             {ETAPAS.map((e) => (
               <option key={e} value={e}>
                 {ETIQUETA_ETAPA[e]}

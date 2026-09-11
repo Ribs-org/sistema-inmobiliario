@@ -1,5 +1,7 @@
 // Proyectos de ejemplo (mock). Precios en UF, referenciales para Santiago 2026.
 
+import type { Unidad } from "@/lib/unidades";
+
 export type EstadoVenta = "entrega-inmediata" | "en-verde" | "en-blanco";
 
 export type Tipologia = {
@@ -43,6 +45,8 @@ export type Proyecto = {
   imagenes?: string[];
   /** Comisión del broker como % del precio de venta */
   comisionPct?: number;
+  /** Detalle unidad por unidad; si existe, el stock sale de aquí */
+  unidadesDetalle?: Unidad[];
 };
 
 export const ETIQUETA_ESTADO_VENTA: Record<EstadoVenta, string> = {
