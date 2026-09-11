@@ -1,16 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server";
-import {
-  claveCorrecta,
-  COOKIE_SESION,
-  DIAS_SESION,
-  sesionValida,
-  tokenSesion,
-  usaClavePorDefecto,
-} from "@/lib/acceso";
+import { claveCorrecta, COOKIE_SESION, DIAS_SESION, tokenSesion, usaClavePorDefecto } from "@/lib/acceso";
+import { clerkActivo, obtenerSesion } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const s = await obtenerSesion(req);
   return NextResponse.json({
-    autorizado: sesionValida(req.cookies.get(COOKIE_SESION)?.value),
+    autorizado: !!s,
+    sesion: s,
+    clerk: clerkActivo(),
     clavePorDefecto: usaClavePorDefecto(),
   });
 }

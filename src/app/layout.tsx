@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import ProveedorAuth from "@/components/ProveedorAuth";
 
 // Tipografías de Broker Capital: Playfair Display para títulos e Inter para la interfaz.
 const bricolage = Playfair_Display({
@@ -28,7 +29,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es-CL" className={`${bricolage.variable} ${plex.variable} h-full antialiased`}>
-      <body className="h-full">{children}</body>
+      <body className="h-full">
+        <ProveedorAuth>{children}</ProveedorAuth>
+      </body>
     </html>
   );
 }

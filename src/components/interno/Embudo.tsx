@@ -23,7 +23,7 @@ type Props = {
 /** Comisión por defecto cuando el proyecto no la define (% del precio). */
 export const COMISION_POR_DEFECTO_PCT = 2.5;
 
-function comisionUF(c: Cliente, proyectos: Proyecto[]): number {
+export function comisionUF(c: Cliente, proyectos: Proyecto[]): number {
   const p = proyectos.find((x) => x.id === c.proyectoId);
   const t = p?.tipologias.find((x) => x.id === c.tipologiaId);
   if (!p || !t) return 0;

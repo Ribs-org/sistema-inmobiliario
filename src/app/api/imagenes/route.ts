@@ -4,7 +4,7 @@
 import { del, put } from "@vercel/blob";
 import { NextResponse, type NextRequest } from "next/server";
 import sharp from "sharp";
-import { COOKIE_SESION, sesionValida } from "@/lib/acceso";
+import { esAdmin, obtenerSesion } from "@/lib/auth";
 import { urlImagen } from "@/lib/proyectos-store";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,8 @@ const IMAGENES = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/
 const LADO_MAX = 1600;
 const CALIDAD = 82;
 
-const autorizado = (req: NextRequest) => sesionValida(req.cookies.get(COOKIE_SESION)?.value);
+/** Subir y borrar imágenes es solo del admin. */
+const autorizado = async (req: NextRequest) => esAdmin(await obtenerSesion(req));
 const slugCarpeta = (s: string) => s.replace(/[^a-z0-9/_-]/gi, "").slice(0, 120) || "varios";
 
 async function optimizar(archivo: File): Promise<{ datos: Buffer; tipo: string; ext: string }> {
@@ -34,7 +35,8 @@ async function optimizar(archivo: File): Promise<{ datos: Buffer; tipo: string; 
 }
 
 export async function POST(req: NextRequest) {
-  if (!autorizado(req)) return NextResponse.json({ error: "Necesitas la clave interna" }, { status: 401 });
+  if (!(await autorizado(req)))
+    return NextResponse.json({ error: "Solo un administrador puede gestionar imágenes" }, { status: 403 });
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return NextResponse.json({ error: "Almacenamiento de imágenes no configurado" }, { status: 503 });
   }
@@ -70,7 +72,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!autorizado(req)) return NextResponse.json({ error: "Necesitas la clave interna" }, { status: 401 });
+  if (!(await autorizado(req)))
+    return NextResponse.json({ error: "Solo un administrador puede gestionar imágenes" }, { status: 403 });
   const url = urlImagen(req.nextUrl.searchParams.get("url"));
   if (!url) return NextResponse.json({ error: "URL inválida" }, { status: 400 });
   await del(url);

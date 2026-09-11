@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE_SESION, sesionValida } from "@/lib/acceso";
+import { esAdmin, obtenerSesion, puedeVer, type Sesion } from "@/lib/auth";
 import {
   ETAPAS_RESERVA,
   normalizarCliente,
@@ -15,20 +15,12 @@ import {
 } from "@/lib/clientes-store";
 import { guardarProyecto, listarProyectosGuardados } from "@/lib/proyectos-store";
 
-function noAutorizado() {
-  return NextResponse.json({ error: "Necesitas la clave interna" }, { status: 401 });
-}
+export const dynamic = "force-dynamic";
 
-function autorizado(req: NextRequest) {
-  return sesionValida(req.cookies.get(COOKIE_SESION)?.value);
-}
-
-function sinAlmacenamiento() {
-  return NextResponse.json(
-    { error: "Sin almacenamiento conectado", almacenamiento: "ninguno" },
-    { status: 503 },
-  );
-}
+const noAutorizado = () => NextResponse.json({ error: "Necesitas iniciar sesión" }, { status: 401 });
+const prohibido = () => NextResponse.json({ error: "Ese cliente es de otro broker" }, { status: 403 });
+const sinAlmacenamiento = () =>
+  NextResponse.json({ error: "Sin almacenamiento conectado", almacenamiento: "ninguno" }, { status: 503 });
 
 /**
  * Stock: al entrar a reserva/promesa/escritura se descuenta una unidad de la tipología del
@@ -56,29 +48,64 @@ async function ajustarStock(cliente: Cliente, previo: Cliente | undefined): Prom
   };
 }
 
+/** El admin ve todo; un broker ve lo suyo y lo que no tiene dueño. */
+const visibles = (lista: Cliente[], s: Sesion) => lista.filter((c) => puedeVer(s, c.vendedorId));
+
 export async function GET(req: NextRequest) {
-  if (!autorizado(req)) return noAutorizado();
+  const s = await obtenerSesion(req);
+  if (!s) return noAutorizado();
   if (!almacenamientoDisponible()) {
-    return NextResponse.json({ clientes: [], almacenamiento: "ninguno" });
+    return NextResponse.json({ clientes: [], almacenamiento: "ninguno", sesion: s });
   }
-  return NextResponse.json({ clientes: await listarClientes(), almacenamiento: "redis" });
+  return NextResponse.json({
+    clientes: visibles(await listarClientes(), s),
+    almacenamiento: "redis",
+    sesion: s,
+  });
 }
 
 export async function POST(req: NextRequest) {
-  if (!autorizado(req)) return noAutorizado();
+  const s = await obtenerSesion(req);
+  if (!s) return noAutorizado();
   if (!almacenamientoDisponible()) return sinAlmacenamiento();
   const recibido = normalizarCliente(await req.json().catch(() => null));
   if (!recibido)
     return NextResponse.json({ error: "El cliente necesita al menos un nombre" }, { status: 400 });
-  const previo = (await listarClientes()).find((c) => c.id === recibido.id);
-  const cliente = await ajustarStock(reconciliarCliente(recibido, previo), previo);
-  return NextResponse.json({ clientes: await guardarCliente(cliente), almacenamiento: "redis" });
+
+  const todos = await listarClientes();
+  const previo = todos.find((c) => c.id === recibido.id);
+  if (previo && !puedeVer(s, previo.vendedorId)) return prohibido();
+
+  // El vendedor solo lo puede cambiar el admin; un broker siempre queda como dueño de lo suyo.
+  const vendedorId = esAdmin(s)
+    ? (recibido.vendedorId ?? previo?.vendedorId ?? null)
+    : (previo?.vendedorId ?? s.id);
+  const vendedorNombre = esAdmin(s)
+    ? recibido.vendedorNombre || previo?.vendedorNombre || ""
+    : (previo?.vendedorNombre ?? s.nombre);
+
+  const cliente = await ajustarStock(
+    reconciliarCliente({ ...recibido, vendedorId, vendedorNombre }, previo),
+    previo,
+  );
+  return NextResponse.json({
+    clientes: visibles(await guardarCliente(cliente), s),
+    almacenamiento: "redis",
+    sesion: s,
+  });
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!autorizado(req)) return noAutorizado();
+  const s = await obtenerSesion(req);
+  if (!s) return noAutorizado();
   if (!almacenamientoDisponible()) return sinAlmacenamiento();
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Falta el id" }, { status: 400 });
-  return NextResponse.json({ clientes: await eliminarCliente(id), almacenamiento: "redis" });
+  const previo = (await listarClientes()).find((c) => c.id === id);
+  if (previo && !puedeVer(s, previo.vendedorId)) return prohibido();
+  return NextResponse.json({
+    clientes: visibles(await eliminarCliente(id), s),
+    almacenamiento: "redis",
+    sesion: s,
+  });
 }

@@ -25,6 +25,12 @@ type Semilla = {
   historial: [number, TipoInteraccion, string][];
 };
 
+/** Vendedores ficticios: los clientes de la demo se reparten entre ellos. */
+const BROKERS = [
+  { id: "demo_broker_1", nombre: "Carolina Vega" },
+  { id: "demo_broker_2", nombre: "Tomás Reyes" },
+];
+
 const SEMILLAS: Semilla[] = [
   {
     nombre: "Camila Rojas",
@@ -190,6 +196,8 @@ export function clientesDemo(): Cliente[] {
       interacciones: s.historial.map(([dias, tipo, texto]) =>
         nuevaInteraccion({ tipo, texto, fecha: sumarDias(hoy, -dias), creadoEn: haceDias(dias) }),
       ),
+      vendedorId: BROKERS[i % BROKERS.length].id,
+      vendedorNombre: BROKERS[i % BROKERS.length].nombre,
     }),
   );
 }

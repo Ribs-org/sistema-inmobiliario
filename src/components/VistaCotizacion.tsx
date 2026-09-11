@@ -255,7 +255,7 @@ function VistaIndividual({ cotizacion: c, proyecto: p, contacto }: Omit<Props, "
               incendio estimados y gastos operacionales aproximados. No constituye oferta ni aprobación de
               crédito; las condiciones definitivas las fija cada banco. Precios sujetos a disponibilidad.
             </p>
-            <p className="mt-2 text-ink-muted">{contacto}</p>
+            <p className="mt-2 text-ink-muted">{c.vendedorNombre ? `` : contacto}</p>
           </footer>
         </article>
       </div>

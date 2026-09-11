@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { Proyecto } from "@/data/proyectos";
-import { COOKIE_SESION, sesionValida } from "@/lib/acceso";
+import { esAdmin, obtenerSesion } from "@/lib/auth";
 import { calcularCaminatas } from "@/lib/caminatas";
 import {
   eliminarProyecto,
@@ -15,8 +15,10 @@ import { almacenamientoDisponible } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
-const autorizado = (req: NextRequest) => sesionValida(req.cookies.get(COOKIE_SESION)?.value);
-const noAutorizado = () => NextResponse.json({ error: "Necesitas la clave interna" }, { status: 401 });
+/** Editar el catálogo es solo del admin; los brokers lo leen desde el GET público. */
+const autorizado = async (req: NextRequest) => esAdmin(await obtenerSesion(req));
+const noAutorizado = () =>
+  NextResponse.json({ error: "Solo un administrador puede editar proyectos" }, { status: 403 });
 const sinAlmacenamiento = () => NextResponse.json({ error: "Sin almacenamiento conectado" }, { status: 503 });
 
 /** Público: la lista que ve el mapa. */
@@ -27,7 +29,7 @@ export async function GET() {
 
 /** Interno: crear o actualizar. Con {importarMuestra: true} copia los proyectos de ejemplo a Redis. */
 export async function POST(req: NextRequest) {
-  if (!autorizado(req)) return noAutorizado();
+  if (!(await autorizado(req))) return noAutorizado();
   if (!almacenamientoDisponible()) return sinAlmacenamiento();
   const body = (await req.json().catch(() => null)) as Record<string, unknown> | null;
 
@@ -86,7 +88,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!autorizado(req)) return noAutorizado();
+  if (!(await autorizado(req))) return noAutorizado();
   if (!almacenamientoDisponible()) return sinAlmacenamiento();
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "Falta el id" }, { status: 400 });

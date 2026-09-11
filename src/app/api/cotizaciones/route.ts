@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { COOKIE_SESION, sesionValida } from "@/lib/acceso";
+import { obtenerSesion, puedeVer } from "@/lib/auth";
 import {
   DIAS_VIGENCIA,
   eliminarCotizacion,
@@ -17,15 +17,15 @@ import { almacenamientoDisponible } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
-const autorizado = (req: NextRequest) => sesionValida(req.cookies.get(COOKIE_SESION)?.value);
-const noAutorizado = () => NextResponse.json({ error: "Necesitas la clave interna" }, { status: 401 });
+const noAutorizado = () => NextResponse.json({ error: "Necesitas iniciar sesión" }, { status: 401 });
 const texto = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
 /** Interno: lista de cotizaciones, opcionalmente de un cliente (?cliente=id). */
 export async function GET(req: NextRequest) {
-  if (!autorizado(req)) return noAutorizado();
+  const s = await obtenerSesion(req);
+  if (!s) return noAutorizado();
   const clienteId = req.nextUrl.searchParams.get("cliente");
-  const todas = await listarCotizaciones();
+  const todas = (await listarCotizaciones()).filter((c) => puedeVer(s, c.vendedorId));
   const lista = clienteId ? todas.filter((c) => c.clienteId === clienteId) : todas;
   return NextResponse.json({
     cotizaciones: lista.sort((a, b) => b.creadaEn.localeCompare(a.creadaEn)),
@@ -33,7 +33,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!autorizado(req)) return noAutorizado();
+  const s = await obtenerSesion(req);
+  if (!s) return noAutorizado();
   if (!almacenamientoDisponible()) {
     return NextResponse.json({ error: "Sin almacenamiento conectado" }, { status: 503 });
   }
@@ -82,6 +83,9 @@ export async function POST(req: NextRequest) {
     clienteId: texto(b?.clienteId, 40) || null,
     clienteNombre,
     clienteEmail: texto(b?.clienteEmail, 120),
+    vendedorId: s.id,
+    vendedorNombre: s.nombre,
+    vendedorEmail: s.email,
     parametros,
     nota: texto(b?.nota, 500),
     creadaEn: ahora.toISOString(),
@@ -106,7 +110,8 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!autorizado(req)) return noAutorizado();
+  const s = await obtenerSesion(req);
+  if (!s) return noAutorizado();
   const codigo = req.nextUrl.searchParams.get("codigo");
   if (!codigo) return NextResponse.json({ error: "Falta el código" }, { status: 400 });
   await eliminarCotizacion(codigo);

@@ -85,6 +85,9 @@ export type Cliente = {
   proximoContacto: string | null;
   notas: string;
   interacciones: Interaccion[];
+  /** Broker responsable (id de sesión); null = sin asignar, lo ve solo el admin */
+  vendedorId?: string | null;
+  vendedorNombre?: string;
   creadoEn: string;
   actualizadoEn: string;
 };
@@ -167,6 +170,8 @@ export function normalizarCliente(entrada: unknown): Cliente | null {
     proximoContacto: esFecha(fecha) ? fecha : null,
     notas: texto(e.notas, 2000),
     interacciones,
+    vendedorId: texto(e.vendedorId, 60) || null,
+    vendedorNombre: texto(e.vendedorNombre, 80),
     creadoEn: texto(e.creadoEn, 40) || undefined,
     actualizadoEn: new Date().toISOString(),
   });

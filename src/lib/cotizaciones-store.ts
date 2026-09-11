@@ -39,6 +39,10 @@ export type Cotizacion = {
   clienteId: string | null;
   clienteNombre: string;
   clienteEmail: string;
+  /** Broker que la emitió; aparece en el pie del documento público */
+  vendedorId?: string | null;
+  vendedorNombre?: string;
+  vendedorEmail?: string;
   parametros: ParametrosCotizacion;
   nota: string;
   creadaEn: string;

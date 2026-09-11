@@ -7,6 +7,7 @@ import type { Proyecto } from "@/data/proyectos";
 import { proyectosMuestra } from "@/data/proyectos-muestra";
 import Marca from "@/components/Marca";
 import Embudo from "@/components/interno/Embudo";
+import RankingVendedores from "@/components/interno/RankingVendedores";
 import ProyectosInterno from "@/components/interno/ProyectosInterno";
 import type { Cotizacion } from "@/lib/cotizaciones-store";
 import {
@@ -29,6 +30,9 @@ import {
 } from "@/lib/clientes";
 import { fmtUF } from "@/lib/format";
 import { UF_RESPALDO } from "@/lib/uf";
+import type { Sesion } from "@/lib/auth";
+import type { Usuario } from "@/app/api/usuarios/route";
+import BotonUsuario from "@/components/BotonUsuario";
 import { Chip } from "@/components/ui";
 
 type Auth = "cargando" | "bloqueado" | "abierto";
@@ -112,6 +116,11 @@ export default function Interno() {
   const [proyectos, setProyectos] = useState<Proyecto[]>(proyectosMuestra());
   const [origenProyectos, setOrigenProyectos] = useState<"redis" | "muestra">("muestra");
   const [valorUF, setValorUF] = useState(UF_RESPALDO);
+  const [sesion, setSesion] = useState<Sesion | null>(null);
+  const [conClerk, setConClerk] = useState(false);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [vendedorFiltro, setVendedorFiltro] = useState<string>("todos");
+  const admin = sesion?.rol === "admin";
   useEffect(() => {
     let vivo = true;
     fetch("/api/uf")
@@ -129,10 +138,19 @@ export default function Interno() {
       setAuth("bloqueado");
       return;
     }
-    const j = (await r.json()) as { clientes: Cliente[]; almacenamiento: Almacenamiento };
+    const j = (await r.json()) as {
+      clientes: Cliente[];
+      almacenamiento: Almacenamiento;
+      sesion?: Sesion | null;
+    };
     setAlmacenamiento(j.almacenamiento);
     setClientes(j.almacenamiento === "redis" ? j.clientes : leerLocal());
+    if (j.sesion) setSesion(j.sesion);
     setAuth("abierto");
+    fetch("/api/usuarios")
+      .then((r) => (r.ok ? r.json() : { usuarios: [] }))
+      .then((ju: { usuarios?: Usuario[] }) => setUsuarios(ju.usuarios ?? []))
+      .catch(() => {});
     fetch("/api/proyectos")
       .then((r) => r.json())
       .then((jp: { proyectos: Proyecto[]; origen: "redis" | "muestra" }) => {
@@ -148,12 +166,16 @@ export default function Interno() {
     let vivo = true;
     fetch("/api/acceso")
       .then((r) => r.json())
-      .then((j: { autorizado: boolean; clavePorDefecto: boolean }) => {
-        if (!vivo) return;
-        setClavePorDefecto(j.clavePorDefecto);
-        if (j.autorizado) cargar();
-        else setAuth("bloqueado");
-      })
+      .then(
+        (j: { autorizado: boolean; clavePorDefecto: boolean; clerk?: boolean; sesion?: Sesion | null }) => {
+          if (!vivo) return;
+          setClavePorDefecto(j.clavePorDefecto);
+          setConClerk(!!j.clerk);
+          if (j.sesion) setSesion(j.sesion);
+          if (j.autorizado) cargar();
+          else setAuth("bloqueado");
+        },
+      )
       .catch(() => vivo && setAuth("bloqueado"));
     return () => {
       vivo = false;
@@ -353,6 +375,13 @@ export default function Interno() {
           >
             Entrar
           </button>
+          {conClerk && (
+            <p className="mt-4 text-center text-sm">
+              <Link href="/ingresar" className="font-medium text-accent hover:underline">
+                Entrar con mi cuenta de broker
+              </Link>
+            </p>
+          )}
           <Link href="/" className="mt-4 block text-center text-xs text-ink-muted hover:text-ink">
             Volver al mapa
           </Link>
@@ -366,10 +395,17 @@ export default function Interno() {
       <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-oro/30 bg-negro px-4 text-white">
         <div className="flex items-center gap-3">
           <Marca />
-          <span className="hidden text-sm text-white/60 sm:inline">Área interna</span>
+          <span className="hidden text-sm text-white/60 sm:inline">
+            {sesion ? sesion.nombre : "Área interna"}
+            {sesion && (
+              <span className="ml-2 rounded bg-white/10 px-1.5 py-0.5 text-xs text-oro-claro">
+                {admin ? "Admin" : "Broker"}
+              </span>
+            )}
+          </span>
         </div>
         <nav className="flex gap-1 rounded-md bg-white/10 p-0.5" aria-label="Secciones">
-          {SECCIONES.map((s) => (
+          {SECCIONES.filter((s) => admin || s.id !== "proyectos").map((s) => (
             <button
               key={s.id}
               type="button"
@@ -387,17 +423,53 @@ export default function Interno() {
           <Link href="/" className="text-white/70 hover:text-white">
             Mapa
           </Link>
-          <button type="button" onClick={salir} className="text-white/70 hover:text-white">
-            Salir
-          </button>
+          {sesion?.origen === "clerk" ? (
+            <BotonUsuario />
+          ) : (
+            <button type="button" onClick={salir} className="text-white/70 hover:text-white">
+              Salir
+            </button>
+          )}
         </nav>
       </header>
 
       <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-4 py-5 lg:px-8">
+          {seccion === "embudo" && admin && (
+            <RankingVendedores
+              clientes={clientes}
+              proyectos={proyectos}
+              valorUF={valorUF}
+              nombres={Object.fromEntries(usuarios.map((u) => [u.id, u.nombre]))}
+            />
+          )}
+          {seccion === "embudo" && admin && usuarios.length > 1 && (
+            <label className="mb-4 flex items-center gap-2 text-sm">
+              <span className="text-ink-muted">Vendedor</span>
+              <select
+                value={vendedorFiltro}
+                onChange={(e) => setVendedorFiltro(e.target.value)}
+                className="rounded-md border border-line bg-panel px-2 py-1 text-sm"
+              >
+                <option value="todos">Todo el equipo</option>
+                <option value="sin">Sin asignar</option>
+                {usuarios.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           {seccion === "embudo" && (
             <Embudo
-              clientes={clientes}
+              clientes={
+                vendedorFiltro === "todos"
+                  ? clientes
+                  : clientes.filter((c) =>
+                      vendedorFiltro === "sin" ? !c.vendedorId : c.vendedorId === vendedorFiltro,
+                    )
+              }
               proyectos={proyectos}
               valorUF={valorUF}
               onAbrir={(c) => {
@@ -557,6 +629,7 @@ export default function Interno() {
                     key={`${editando.id}-${editando.actualizadoEn}`}
                     inicial={editando}
                     proyectos={proyectos}
+                    usuarios={admin ? usuarios : []}
                     existente={clientes.some((c) => c.id === editando.id)}
                     guardando={guardando}
                     onGuardar={guardar}
@@ -587,6 +660,7 @@ function Tile({ etiqueta, valor, alerta }: { etiqueta: string; valor: number; al
 function FormularioCliente({
   inicial,
   proyectos,
+  usuarios,
   existente,
   guardando,
   onGuardar,
@@ -595,6 +669,8 @@ function FormularioCliente({
 }: {
   inicial: Cliente;
   proyectos: Proyecto[];
+  /** Vendedores para reasignar; vacío si quien mira no es admin */
+  usuarios: Usuario[];
   existente: boolean;
   guardando: boolean;
   onGuardar: (c: Cliente, mantenerAbierto?: boolean) => void;
@@ -720,6 +796,27 @@ function FormularioCliente({
           />
         </Campo>
       </div>
+
+      {usuarios.length > 0 && (
+        <Campo etiqueta="Vendedor responsable">
+          <select
+            value={c.vendedorId ?? ""}
+            onChange={(e) => {
+              const u = usuarios.find((x) => x.id === e.target.value);
+              set({ vendedorId: e.target.value || null, vendedorNombre: u?.nombre ?? "" });
+            }}
+            className={INPUT}
+          >
+            <option value="">Sin asignar</option>
+            {usuarios.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.nombre}
+                {u.email ? ` · ${u.email}` : ""}
+              </option>
+            ))}
+          </select>
+        </Campo>
+      )}
 
       <Campo etiqueta="Notas">
         <textarea
