@@ -102,3 +102,5 @@ El rol sale de `ADMIN_EMAILS` (correos separados por coma) o de `publicMetadata.
 | Proyectos, importación, fotos | sí | no (los ve en el mapa) |
 
 Cada cliente y cada cotización guardan `vendedorId` y `vendedorNombre`; la cotización pública muestra el broker que la emitió en vez del contacto genérico.
+
+> Clerk quedó provisionado desde el Marketplace como **instancia de desarrollo** (el login muestra el sello "Development mode" y admite hasta 100 usuarios). Sirve para el equipo y la demo. Al tener un dominio propio conviene crear la instancia de producción en Clerk y apuntar sus registros DNS; las variables se reemplazan solas desde la integración.
