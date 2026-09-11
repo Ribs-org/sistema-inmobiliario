@@ -30,6 +30,10 @@ export default function ProveedorAuth({ children }: { children: ReactNode }) {
   return (
     <ClerkProvider
       localization={localizacion}
+      // Rutas propias: sin esto los enlaces internos de Clerk apuntan a /sign-in y /sign-up,
+      // que no existen, y el botón de registro parece no hacer nada.
+      signInUrl="/ingresar"
+      signUpUrl="/registrarse"
       appearance={{
         variables: { colorPrimary: "#b1921a", borderRadius: "0.5rem" },
         elements: { footerActionLink: "text-accent" },
