@@ -60,7 +60,11 @@ La pestaña **Embudo** muestra una columna por etapa con el conteo, la mediana d
 
 Cada cliente tiene una carpeta con los papeles que piden el banco y la inmobiliaria, agrupados por etapa: para la reserva y el crédito, para la promesa, y para la escritura y la entrega. La lista cambia según cómo recibe sus ingresos el cliente: a quien tiene contrato se le piden liquidaciones y certificado de AFP, y al independiente su carpeta tributaria del SII y sus boletas. Cada documento lleva estado (pendiente, recibido, con observaciones, no aplica), responsable y, cuando ayuda, dónde se consigue. La barra de avance y la frase de lo que falta aparecen en la ficha, en la pestaña **Hoy** y en el correo diario, así que un cliente estancado deja de ser "lleva 20 días" y pasa a ser "le falta la preaprobación".
 
-Los archivos van a **Vercel Blob con acceso privado**, no a una URL pública: llevan cédulas y liquidaciones de sueldo. Se suben y se leen por `/api/documentos`, que comprueba la sesión, que el cliente sea de quien pide, y que la ruta apunte a la carpeta de ese mismo cliente. Se aceptan PDF, JPG, PNG y HEIC de hasta 15 MB. Adjuntar requiere Upstash Redis conectado; en modo navegador la pantalla lo avisa.
+Los archivos van a **Vercel Blob con acceso privado**, no a una URL pública: llevan cédulas y liquidaciones de sueldo. Viven en su propia tienda, `pyxis-documentos` (variable `DOCS_READ_WRITE_TOKEN`), porque una tienda pública no admite archivos privados y las fotos de proyecto sí tienen que ser públicas para los brochures. Pedir el archivo directo a la tienda devuelve 403; la única vía es `/api/documentos`, que comprueba la sesión, que el cliente sea de quien pide y que la ruta apunte a la carpeta de ese mismo cliente. Se aceptan PDF, JPG, PNG y HEIC de hasta 15 MB. Adjuntar requiere Upstash Redis conectado; en modo navegador la pantalla lo avisa.
+
+```bash
+vercel blob create-store pyxis-documentos --access private
+```
 
 ## Informe de conversión
 

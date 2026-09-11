@@ -27,6 +27,12 @@ const EXT: Record<string, string> = {
 
 const error = (mensaje: string, status: number) => NextResponse.json({ error: mensaje }, { status });
 
+/**
+ * Los documentos viven en su propia tienda de Blob (pyxis-documentos), creada con acceso
+ * privado. Las fotos de proyecto siguen en la tienda pública, que no admite blobs privados.
+ */
+const tokenDocumentos = () => process.env.DOCS_READ_WRITE_TOKEN;
+
 /** Carpeta de un cliente dentro del almacén. Ningún archivo se lee fuera de la suya. */
 const carpetaDe = (clienteId: string) => `documentos/${clienteId}/`;
 
@@ -64,7 +70,9 @@ export async function GET(req: NextRequest) {
   if (!doc?.ruta) return error("Ese documento no tiene archivo", 404);
   // La ruta viaja dentro del cliente, así que se comprueba que apunte a su propia carpeta.
   if (!doc.ruta.startsWith(carpetaDe(ctx.cliente.id))) return error("Ruta de archivo inválida", 400);
-  const archivo = await get(doc.ruta, { access: "private" }).catch(() => null);
+  const token = tokenDocumentos();
+  if (!token) return error("Almacenamiento de documentos no configurado", 503);
+  const archivo = await get(doc.ruta, { access: "private", token }).catch(() => null);
   if (!archivo || archivo.statusCode !== 200) return error("No se pudo leer el archivo", 502);
   return new NextResponse(archivo.stream, {
     headers: {
@@ -87,18 +95,19 @@ export async function POST(req: NextRequest) {
 
   const archivo = form?.get("archivo");
   if (!(archivo instanceof File) || archivo.size === 0) return error("Falta el archivo", 400);
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return error("Almacenamiento de archivos no configurado", 503);
+  const token = tokenDocumentos();
+  if (!token) return error("Almacenamiento de documentos no configurado", 503);
   if (!EXT[archivo.type]) return error("Usa PDF, JPG, PNG o HEIC", 415);
   if (archivo.size > MAX_BYTES) return error("El archivo supera los 15 MB", 413);
 
   const blob = await put(
     `${carpetaDe(cliente.id)}${definicion.id}.${EXT[archivo.type]}`,
     Buffer.from(await archivo.arrayBuffer()),
-    { access: "private", addRandomSuffix: true, contentType: archivo.type },
+    { access: "private", addRandomSuffix: true, contentType: archivo.type, token },
   );
   // El archivo nuevo reemplaza al anterior; el viejo se borra para no dejar copias sueltas.
   const rutaPrevia = cliente.documentos?.find((d) => d.id === definicion.id)?.ruta;
-  if (rutaPrevia && rutaPrevia !== blob.pathname) await del(rutaPrevia).catch(() => {});
+  if (rutaPrevia && rutaPrevia !== blob.pathname) await del(rutaPrevia, { token }).catch(() => {});
 
   return guardarYResponder(
     {
@@ -126,7 +135,8 @@ export async function DELETE(req: NextRequest) {
   const { cliente, sesion } = ctx;
   const doc = cliente.documentos?.find((d) => d.id === q.get("doc"));
   if (!doc) return error("Ese documento no está en la carpeta", 404);
-  if (doc.ruta?.startsWith(carpetaDe(cliente.id))) await del(doc.ruta).catch(() => {});
+  const token = tokenDocumentos();
+  if (doc.ruta?.startsWith(carpetaDe(cliente.id)) && token) await del(doc.ruta, { token }).catch(() => {});
   return guardarYResponder(
     {
       ...cliente,
