@@ -28,6 +28,7 @@ import {
   type Interaccion,
 } from "@/lib/clientes";
 import { fmtUF } from "@/lib/format";
+import { UF_RESPALDO } from "@/lib/uf";
 import { Chip } from "@/components/ui";
 
 type Auth = "cargando" | "bloqueado" | "abierto";
@@ -110,6 +111,17 @@ export default function Interno() {
   const [seccion, setSeccion] = useState<Seccion>("clientes");
   const [proyectos, setProyectos] = useState<Proyecto[]>(proyectosMuestra());
   const [origenProyectos, setOrigenProyectos] = useState<"redis" | "muestra">("muestra");
+  const [valorUF, setValorUF] = useState(UF_RESPALDO);
+  useEffect(() => {
+    let vivo = true;
+    fetch("/api/uf")
+      .then((r) => r.json())
+      .then((j: { valor?: number }) => vivo && typeof j.valor === "number" && setValorUF(j.valor))
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, []);
 
   const cargar = useCallback(async () => {
     const r = await fetch("/api/clientes");
@@ -386,6 +398,8 @@ export default function Interno() {
           {seccion === "embudo" && (
             <Embudo
               clientes={clientes}
+              proyectos={proyectos}
+              valorUF={valorUF}
               onAbrir={(c) => {
                 setSeccion("clientes");
                 setEditando(c);

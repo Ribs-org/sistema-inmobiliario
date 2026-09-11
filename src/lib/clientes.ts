@@ -24,6 +24,9 @@ export const ETIQUETA_ETAPA: Record<Etapa, string> = {
 /** Etapas que siguen en curso (no cerradas). */
 export const ETAPAS_ACTIVAS: Etapa[] = ["nuevo", "contactado", "visita", "reserva", "promesa"];
 
+/** Etapas en que la unidad está comprometida y descuenta stock. */
+export const ETAPAS_RESERVA: Etapa[] = ["reserva", "promesa", "escritura"];
+
 export const TIPOS_INTERACCION = [
   "llamada",
   "whatsapp",
@@ -32,6 +35,7 @@ export const TIPOS_INTERACCION = [
   "reunion",
   "cotizacion",
   "etapa",
+  "stock",
   "nota",
 ] as const;
 export type TipoInteraccion = (typeof TIPOS_INTERACCION)[number];
@@ -44,6 +48,7 @@ export const ETIQUETA_INTERACCION: Record<TipoInteraccion, string> = {
   reunion: "Reunión",
   cotizacion: "Cotización enviada",
   etapa: "Cambio de etapa",
+  stock: "Stock",
   nota: "Nota",
 };
 

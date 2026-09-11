@@ -6,6 +6,7 @@ import type { Tipologia } from "@/data/proyectos";
 import { fmtCLP, fmtDist, fmtM2, fmtUF } from "@/lib/format";
 import type { EstacionCercana } from "@/lib/geo";
 import type { ProyectoEnriquecido } from "@/lib/proyectos";
+import { arriendoEstimadoUF } from "@/lib/rentabilidad";
 import Galeria from "./Galeria";
 import { BadgeEstado, Dato, EtiquetaLinea } from "./ui";
 
@@ -43,6 +44,14 @@ export default function FichaProyecto({
             title="Registrar un cliente interesado en este proyecto"
           >
             + Cliente
+          </Link>
+          <Link
+            href={`/p/${p.id}`}
+            target="_blank"
+            className="rounded-md px-2 py-1 text-sm text-ink-muted hover:bg-fondo hover:text-ink"
+            title="Brochure del proyecto para compartir o imprimir"
+          >
+            Brochure
           </Link>
           <button
             type="button"
@@ -120,6 +129,14 @@ export default function FichaProyecto({
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-xs text-ink-muted">
                     {fmtUF(Math.round(t.precioUF / t.m2Utiles))}/m² · {t.disponibles} disponibles
+                    <span className="block">
+                      Arriendo est. {fmtUF(t.arriendoUF ?? arriendoEstimadoUF(t.precioUF), 2)} · rentabilidad
+                      bruta{" "}
+                      {((((t.arriendoUF ?? arriendoEstimadoUF(t.precioUF)) * 12) / t.precioUF) * 100)
+                        .toFixed(1)
+                        .replace(".", ",")}{" "}
+                      % anual
+                    </span>
                     {t.plano && (
                       <>
                         {" · "}

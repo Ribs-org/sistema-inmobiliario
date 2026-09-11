@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import type { Proyecto } from "@/data/proyectos";
+import { fmtCLP, fmtUF } from "@/lib/format";
 import {
   diasEnEtapa,
   ETAPAS,
@@ -13,8 +15,20 @@ import {
 
 type Props = {
   clientes: Cliente[];
+  proyectos: Proyecto[];
+  valorUF: number;
   onAbrir: (c: Cliente) => void;
 };
+
+/** Comisión por defecto cuando el proyecto no la define (% del precio). */
+export const COMISION_POR_DEFECTO_PCT = 2.5;
+
+function comisionUF(c: Cliente, proyectos: Proyecto[]): number {
+  const p = proyectos.find((x) => x.id === c.proyectoId);
+  const t = p?.tipologias.find((x) => x.id === c.tipologiaId);
+  if (!p || !t) return 0;
+  return (t.precioUF * (p.comisionPct ?? COMISION_POR_DEFECTO_PCT)) / 100;
+}
 
 /** Días en etapa a partir de los cuales un cliente activo se marca como estancado. */
 export const DIAS_ESTANCADO = 14;
@@ -26,7 +40,13 @@ function mediana(xs: number[]) {
   return s.length % 2 ? s[m] : Math.round((s[m - 1] + s[m]) / 2);
 }
 
-export default function Embudo({ clientes, onAbrir }: Props) {
+export default function Embudo({ clientes, proyectos, valorUF, onAbrir }: Props) {
+  const comisionProyectada = clientes
+    .filter((c) => c.etapa === "reserva" || c.etapa === "promesa")
+    .reduce((s, c) => s + comisionUF(c, proyectos), 0);
+  const comisionCerrada = clientes
+    .filter((c) => c.etapa === "escritura")
+    .reduce((s, c) => s + comisionUF(c, proyectos), 0);
   const columnas = useMemo(
     () =>
       ETAPAS.map((etapa) => {
@@ -59,6 +79,18 @@ export default function Embudo({ clientes, onAbrir }: Props) {
           etiqueta="Cierre sobre cerrados"
           valor={tasaCierre === null ? "—" : `${tasaCierre} %`}
           sub="escrituras / (escrituras + perdidos)"
+        />
+      </div>
+      <div className="mb-5 grid grid-cols-2 gap-3">
+        <Tile
+          etiqueta="Comisión proyectada"
+          valor={fmtUF(Math.round(comisionProyectada))}
+          sub={`${fmtCLP(comisionProyectada * valorUF)} · reservas y promesas`}
+        />
+        <Tile
+          etiqueta="Comisión cerrada"
+          valor={fmtUF(Math.round(comisionCerrada))}
+          sub={`${fmtCLP(comisionCerrada * valorUF)} · escrituras`}
         />
       </div>
 

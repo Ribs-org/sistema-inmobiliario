@@ -98,6 +98,7 @@ function normalizarTipologia(entrada: unknown, i: number): Tipologia | null {
     orientacion: texto(e.orientacion, 40),
     disponibles: numero(e.disponibles, 0, 5000),
     plano: urlImagen(e.plano),
+    arriendoUF: numero(e.arriendoUF, 0, 10000) || undefined,
   };
 }
 
@@ -142,6 +143,7 @@ export function normalizarProyecto(entrada: unknown): Proyecto | null {
     tipologias,
     caminatas:
       e.caminatas && typeof e.caminatas === "object" ? (e.caminatas as Proyecto["caminatas"]) : undefined,
+    comisionPct: numero(e.comisionPct, 0, 20) || undefined,
     imagenes: Array.isArray(e.imagenes)
       ? e.imagenes
           .map(urlImagen)

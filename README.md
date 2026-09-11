@@ -77,3 +77,10 @@ Las fotos se optimizan al subir (máximo 1600 px por lado, orientación corregid
 ## Identidad visual
 
 Favicon y emblema (skyline) tomados de broker-capital.com; paleta negro `#0a0a0a` y dorado `#d4af37` / `#b1921a` sobre fondo cálido, tipografías Playfair Display (títulos) e Inter (interfaz). Los iconos viven en `src/app/icon.png`, `src/app/apple-icon.png` y `public/marca-oro.png`; el componente `Marca` muestra emblema y nombre en versión dorada (cabeceras oscuras) o negra (documentos).
+
+## Inspirado en JetBrokers
+
+- **Rentabilidad para inversionista** (`src/lib/rentabilidad.ts`): arriendo estimado (0,45 % mensual del precio, editable por tipología con `arriendoUF`), gastos comunes por m², contribuciones sobre avalúo fiscal, vacancia, rentabilidad bruta y neta, flujo mensual después del dividendo y cobertura del dividendo. Se muestra en el simulador (interruptor "Rentabilidad para inversionista"), en la ficha y en el brochure.
+- **Reservas con stock**: al pasar un cliente a reserva, promesa o escritura se descuenta una unidad de su tipología; al perderlo o retrocederlo se devuelve. Queda registrado en el historial como "Stock". La tabla de Proyectos muestra disponibles y avisa cuando quedan 3 o menos.
+- **Comisiones**: campo `comisionPct` por proyecto (2,5 % si no se define). El embudo muestra comisión proyectada (reservas y promesas) y cerrada (escrituras), en UF y pesos.
+- **Brochure público** `/p/<id>`: fotos con galería, datos, Metro, tipologías con dividendo referencial, arriendo y rentabilidad, planos, condiciones y espacios comunes; imprimible. Botón "Brochure" en la ficha.

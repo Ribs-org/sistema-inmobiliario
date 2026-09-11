@@ -178,6 +178,8 @@ export default function Home() {
       tipologiaId: t.id,
       tipologiaNombre: t.nombre,
       precioUF: t.precioUF,
+      m2Utiles: t.m2Utiles,
+      arriendoUF: t.arriendoUF,
       piePct: seleccionado.pieMinimoPct,
       bonoPiePct: seleccionado.bonoPiePct ?? 0,
       pieEnCuotas: !!seleccionado.pieEnCuotas,

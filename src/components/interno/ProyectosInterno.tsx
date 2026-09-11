@@ -281,6 +281,7 @@ export default function ProyectosInterno({ proyectos, origen, onCambio, onBloque
                 <th className="px-3 py-2 font-medium">Estado</th>
                 <th className="px-3 py-2 text-right font-medium">Desde</th>
                 <th className="hidden px-3 py-2 text-right font-medium md:table-cell">Tipologías</th>
+                <th className="px-3 py-2 text-right font-medium">Disponibles</th>
               </tr>
             </thead>
             <tbody>
@@ -304,6 +305,22 @@ export default function ProyectosInterno({ proyectos, origen, onCambio, onBloque
                     {fmtUF(Math.min(...p.tipologias.map((t) => t.precioUF)))}
                   </td>
                   <td className="hidden px-3 py-2.5 text-right md:table-cell">{p.tipologias.length}</td>
+                  <td className="px-3 py-2.5 text-right">
+                    {(() => {
+                      const total = p.tipologias.reduce((s, t) => s + t.disponibles, 0);
+                      const pocas = p.tipologias.filter((t) => t.disponibles <= 3);
+                      return (
+                        <>
+                          <span className={total <= 3 ? "font-semibold text-warn" : ""}>{total}</span>
+                          {pocas.length > 0 && total > 3 && (
+                            <span className="block text-xs text-warn">
+                              {pocas.map((t) => `${t.nombre}: ${t.disponibles}`).join(" · ")}
+                            </span>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -511,6 +528,18 @@ function FormularioProyecto({
             className={INPUT}
           />
         </Campo>
+        <Campo etiqueta="Comisión broker %">
+          <input
+            type="number"
+            min={0}
+            max={20}
+            step={0.1}
+            value={p.comisionPct ?? ""}
+            onChange={(e) => set({ comisionPct: Number(e.target.value) || undefined })}
+            placeholder="2,5"
+            className={INPUT}
+          />
+        </Campo>
         <Campo etiqueta="Unidades">
           <input
             type="number"
@@ -610,7 +639,17 @@ function FormularioProyecto({
                 value={t.orientacion}
                 onChange={(e) => setTip(i, { orientacion: e.target.value })}
                 placeholder="Orientación"
-                className={`${INPUT} col-span-4 sm:col-span-8`}
+                className={`${INPUT} col-span-3 sm:col-span-6`}
+              />
+              <input
+                type="number"
+                min={0}
+                step="any"
+                value={t.arriendoUF || ""}
+                onChange={(e) => setTip(i, { arriendoUF: Number(e.target.value) || undefined })}
+                placeholder="Arriendo UF/mes"
+                title="Arriendo mensual estimado en UF (opcional; si falta se estima)"
+                className={`${INPUT} col-span-1 sm:col-span-2`}
               />
             </div>
           ))}

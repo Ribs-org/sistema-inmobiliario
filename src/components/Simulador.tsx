@@ -3,6 +3,14 @@
 import { useMemo, useState } from "react";
 import { CARGA_MAXIMA_RENTA, cuotaPie, simularCredito } from "@/lib/credito";
 import { fmtCLP, fmtPct, fmtUF } from "@/lib/format";
+import {
+  arriendoEstimadoUF,
+  calcularRentabilidad,
+  contribucionesEstimadasUF,
+  gastosComunesEstimadosUF,
+  TASA_ARRIENDO_MENSUAL,
+  VACANCIA,
+} from "@/lib/rentabilidad";
 import type { InfoTasa } from "@/lib/tasa";
 import type { InfoUF } from "@/lib/uf";
 import GuardarCotizacion from "./GuardarCotizacion";
@@ -19,6 +27,8 @@ export type PresetSimulador = {
   proyectoNombre: string;
   tipologiaId: string | null;
   tipologiaNombre: string | null;
+  m2Utiles?: number;
+  arriendoUF?: number;
 };
 
 type Props = {
@@ -56,6 +66,13 @@ export default function Simulador({
   const [incluirSeguros, setSeguros] = useState(true);
   const [rentaCLP, setRenta] = useState<number | "">("");
   const [vistaTabla, setVistaTabla] = useState<"anual" | "mensual">("anual");
+
+  // Rentabilidad para inversionista (arriendo y gastos editables; si no se tocan, se estiman del precio).
+  const [inversionista, setInversionista] = useState(false);
+  const [arriendoManual, setArriendoManual] = useState<number | null>(preset?.arriendoUF ?? null);
+  const [gastosComunesManual, setGastosComunesManual] = useState<number | null>(null);
+  const [contribucionesManual, setContribucionesManual] = useState<number | null>(null);
+  const [vacanciaPct, setVacanciaPct] = useState(VACANCIA * 100);
 
   const params = useMemo(
     () => ({
@@ -368,6 +385,106 @@ export default function Simulador({
                   </tbody>
                 </table>
               </div>
+            </section>
+
+            <section className="rounded-xl border border-line bg-panel p-4">
+              <Interruptor
+                activo={inversionista}
+                onChange={setInversionista}
+                label="Rentabilidad para inversionista"
+                descripcion="Arriendo estimado, gastos y flujo mensual después del dividendo"
+              />
+              {inversionista &&
+                (() => {
+                  const arriendoUF = arriendoManual ?? arriendoEstimadoUF(precioUF);
+                  const gastosComunesUF =
+                    gastosComunesManual ?? gastosComunesEstimadosUF(preset?.m2Utiles ?? precioUF / 90);
+                  const contribucionesUF = contribucionesManual ?? contribucionesEstimadasUF(precioUF);
+                  const rr = calcularRentabilidad({
+                    precioUF,
+                    arriendoUF,
+                    dividendoUF: r.dividendoTotalUF,
+                    pieClienteUF: r.pieClienteUF,
+                    gastosComunesUF,
+                    contribucionesUF,
+                    vacancia: vacanciaPct / 100,
+                  });
+                  const pct = (v: number) => `${v.toFixed(1).replace(".", ",")} %`;
+                  return (
+                    <div className="mt-4 space-y-4">
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        <Campo etiqueta="Arriendo mensual" ayuda={clp(arriendoUF)}>
+                          <EntradaNumero
+                            valor={arriendoUF}
+                            onChange={setArriendoManual}
+                            prefijo="UF"
+                            min={0}
+                            step={0.5}
+                          />
+                        </Campo>
+                        <Campo etiqueta="Gastos comunes" ayuda={clp(gastosComunesUF)}>
+                          <EntradaNumero
+                            valor={gastosComunesUF}
+                            onChange={setGastosComunesManual}
+                            prefijo="UF"
+                            min={0}
+                            step={0.1}
+                          />
+                        </Campo>
+                        <Campo etiqueta="Contribuciones" ayuda={clp(contribucionesUF)}>
+                          <EntradaNumero
+                            valor={contribucionesUF}
+                            onChange={setContribucionesManual}
+                            prefijo="UF"
+                            min={0}
+                            step={0.1}
+                          />
+                        </Campo>
+                        <Campo etiqueta="Vacancia">
+                          <EntradaNumero
+                            valor={vacanciaPct}
+                            onChange={setVacanciaPct}
+                            sufijo="%"
+                            min={0}
+                            max={50}
+                            step={1}
+                          />
+                        </Campo>
+                      </div>
+                      <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
+                        <Hecho
+                          t="Rentabilidad bruta"
+                          v={pct(rr.rentabilidadBrutaAnualPct)}
+                          s="arriendo anual / precio"
+                        />
+                        <Hecho
+                          t="Rentabilidad neta"
+                          v={pct(rr.rentabilidadNetaAnualPct)}
+                          s="descontando gastos y vacancia"
+                        />
+                        <Hecho
+                          t="Flujo mensual"
+                          v={`${rr.flujoMensualUF >= 0 ? "+" : "−"}${fmtUF(Math.abs(rr.flujoMensualUF), 2)}`}
+                          s={`${clp(rr.flujoMensualUF)} después del dividendo`}
+                        />
+                        <Hecho
+                          t="Arriendo cubre el dividendo"
+                          v={rr.coberturaDividendoPct === null ? "—" : pct(rr.coberturaDividendoPct)}
+                          s={
+                            rr.retornoSobrePiePct === null
+                              ? undefined
+                              : `retorno sobre el pie ${pct(rr.retornoSobrePiePct)} anual`
+                          }
+                        />
+                      </dl>
+                      <p className="text-xs text-ink-faint">
+                        Arriendo estimado en {(TASA_ARRIENDO_MENSUAL * 100).toFixed(2).replace(".", ",")} %
+                        mensual del precio, gastos comunes por m², contribuciones sobre avalúo fiscal. Sin
+                        impuestos personales ni plusvalía.
+                      </p>
+                    </div>
+                  );
+                })()}
             </section>
 
             <section className="rounded-xl border border-line bg-panel p-4">
