@@ -56,7 +56,8 @@ export async function obtenerTasa(): Promise<InfoTasa> {
       u.searchParams.set("lastdate", fechaISO(hasta));
       u.searchParams.set("timeseries", SERIE_HIPOTECARIA_UF);
       u.searchParams.set("function", "GetSeries");
-      const r = await fetch(u, { next: { revalidate: 86400 } });
+      // Con límite: /api/tasa también se prerenderiza y un Banco Central lento rompería el build.
+      const r = await fetch(u, { next: { revalidate: 86400 }, signal: AbortSignal.timeout(8000) });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const j = (await r.json()) as RespuestaBCCh;
       if (j.Codigo !== 0) throw new Error(j.Descripcion ?? "respuesta con error");
