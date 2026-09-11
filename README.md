@@ -84,3 +84,21 @@ Favicon y emblema (skyline) tomados de broker-capital.com; paleta negro `#0a0a0a
 - **Reservas con stock**: al pasar un cliente a reserva, promesa o escritura se descuenta una unidad de su tipología; al perderlo o retrocederlo se devuelve. Queda registrado en el historial como "Stock". La tabla de Proyectos muestra disponibles y avisa cuando quedan 3 o menos.
 - **Comisiones**: campo `comisionPct` por proyecto (2,5 % si no se define). El embudo muestra comisión proyectada (reservas y promesas) y cerrada (escrituras), en UF y pesos.
 - **Brochure público** `/p/<id>`: fotos con galería, datos, Metro, tipologías con dividendo referencial, arriendo y rentabilidad, planos, condiciones y espacios comunes; imprimible. Botón "Brochure" en la ficha.
+
+## Roles: admin y brokers
+
+Dos formas de entrar conviven:
+
+- **Cuenta propia (Clerk)**: `/ingresar`. Se activa cuando existen `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` y `CLERK_SECRET_KEY` (las provisiona `vercel integration add clerk`). Cada broker entra con su correo o con Google; las invitaciones se gestionan en el panel de Clerk.
+- **Clave de equipo (`CLAVE_INTERNA`)**: sigue funcionando y entra siempre como **admin**. Sirve de respaldo y para scripts.
+
+El rol sale de `ADMIN_EMAILS` (correos separados por coma) o de `publicMetadata.role = "admin"` en Clerk; cualquier otro usuario es **broker**.
+
+| | Admin | Broker |
+| --- | --- | --- |
+| Clientes | todos, y puede reasignar el vendedor | solo los suyos |
+| Cotizaciones | todas | las suyas |
+| Embudo | filtro por vendedor y ranking del equipo | solo lo suyo |
+| Proyectos, importación, fotos | sí | no (los ve en el mapa) |
+
+Cada cliente y cada cotización guardan `vendedorId` y `vendedorNombre`; la cotización pública muestra el broker que la emitió en vez del contacto genérico.
